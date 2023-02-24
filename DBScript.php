@@ -6,7 +6,7 @@
     $dbname = getenv("dbnameSecure");
     $username = getenv("usernameSecure");
     $password = getenv("passwordSecure");
-    echo(hostname);
+    echo($hostname);
     
     // GET variables (some are always included)
 //    $latitude = $_GET["Latitude"];
