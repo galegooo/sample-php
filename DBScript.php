@@ -3,10 +3,13 @@
     <?php
     // Get key values for database connection
     $hostname = getenv("HOSTNAME");
-  //  $dbname = getenv("dbnameSecure");
-   // $username = getenv("usernameSecure");
-   // $password = getenv("passwordSecure");
+    $dbname = getenv("dbnameSecure");
+    $username = getenv("usernameSecure");
+    $password = getenv("passwordSecure");
         echo($hostname);
+    echo($dbname);
+    echo($username);
+    echo($password);
     // GET variables (some are always included)
 //    $latitude = $_GET["Latitude"];
 //    $longitude = $_GET["Longitude"];
@@ -80,7 +83,7 @@
     }
     */
     // Create connection and insert into table
-//    $conn = new mysqli($hostname, $username, $password, $dbname);
+    $conn = new mysqli($hostname, $username, $password, $dbname);
     
   //  if($table == "Openings")  {
   //    $stmt = $conn->prepare("INSERT INTO Openings (OpeningUTCTime, ClosingUTCTime, OpenedTime, Latitude, Longitude, Altitude, Date, UPLYID) VALUES (?, ?, ?, ?, ?, ?, ?, ?);");
@@ -100,7 +103,7 @@
         
     // Close the connection
     //$stmt->close();
- //   $conn->close();
+    $conn->close();
     ?> 
   </body>
 </html>
