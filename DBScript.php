@@ -2,11 +2,11 @@
   <body>
     <?php
     // Get key values for database connection
-  //  $hostname = getenv("HOSTNAME");
+    $hostname = getenv("HOSTNAME");
   //  $dbname = getenv("dbnameSecure");
    // $username = getenv("usernameSecure");
    // $password = getenv("passwordSecure");
-        
+        echo($hostname);
     // GET variables (some are always included)
 //    $latitude = $_GET["Latitude"];
 //    $longitude = $_GET["Longitude"];
@@ -101,7 +101,6 @@
     // Close the connection
     //$stmt->close();
  //   $conn->close();
-    echo "end";
     ?> 
   </body>
 </html>
