@@ -7,28 +7,28 @@
     $username = getenv("usernameSecure");
     $password = getenv("passwordSecure");
     $port = getenv("portSecure");
-
-    // GET variables (some are always included)
-//    $latitude = $_GET["Latitude"];
-//    $longitude = $_GET["Longitude"];
-//    $altitude = $_GET["Altitude"];
-//    $date = $_GET["Date"];
-//    $UPLYID = $_GET["UPLYID"];
     
-//    if($_GET["OpeningUTCTime"]) {
-//      $opening = $_GET["OpeningUTCTime"];
-//      $table = "Openings";    // Got table
- //   }
- //   if($_GET["ClosingUTCTime"])
- //     $closing = $_GET["ClosingUTCTime"];
- //   if($_GET["OpenedTime"])
- //     $diff = $_GET["OpenedTime"];
-//    if($_GET["Velocity"])   {
- //     $velocity = $_GET["Velocity"];
-  //    $table = "GPS"; // Got table
- //   }
- //   if($_GET["UTCTime"])
- //     $time = $_GET["UTCTime"];
+    // GET variables (some are always included)
+    $latitude = $_GET["Latitude"];
+    $longitude = $_GET["Longitude"];
+    $altitude = $_GET["Altitude"];
+    $date = $_GET["Date"];
+    $UPLYID = $_GET["UPLYID"];
+    
+    if($_GET["OpeningUTCTime"]) {
+      $opening = $_GET["OpeningUTCTime"];
+      $table = "Openings";    // Got table
+    }
+    if($_GET["ClosingUTCTime"])
+      $closing = $_GET["ClosingUTCTime"];
+    if($_GET["OpenedTime"])
+      $diff = $_GET["OpenedTime"];
+    if($_GET["Velocity"])   {
+      $velocity = $_GET["Velocity"];
+      $table = "GPS"; // Got table
+    }
+    if($_GET["UTCTime"])
+      $time = $_GET["UTCTime"];
             
     /*
     // Prettify latitude and longitude
@@ -85,24 +85,24 @@
     if ($conn->connect_error) 
       die("Connection failed: " . $conn->connect_error);
 
-  //  if($table == "Openings")  {
-  //    $stmt = $conn->prepare("INSERT INTO Openings (OpeningUTCTime, ClosingUTCTime, OpenedTime, Latitude, Longitude, Altitude, Date, UPLYID) VALUES (?, ?, ?, ?, ?, ?, ?, ?);");
-  //    $stmt->bind_param("sssdddsd", $opening, $closing, $diff, $latitude, $longitude, $altitude, $date, $UPLYID);
-  //  }
-   // else  {
-   //   $stmt = $conn->prepare("INSERT INTO GPS (Latitude, Longitude, Altitude, Velocity, UTCTime, Date, UPLYID) VALUES (?, ?, ?, ?, ?, ?, ?);");
-   //   $stmt->bind_param("ddddssd", $latitude, $longitude, $altitude, $velocity, $time, $date, $UPLYID);
-   // }
+    if($table == "Openings")  {
+      $stmt = $conn->prepare("INSERT INTO Openings (OpeningUTCTime, ClosingUTCTime, OpenedTime, Latitude, Longitude, Altitude, Date, UPLYID) VALUES (?, ?, ?, ?, ?, ?, ?, ?);");
+      $stmt->bind_param("sssdddsd", $opening, $closing, $diff, $latitude, $longitude, $altitude, $date, $UPLYID);
+    }
+    else  {
+      $stmt = $conn->prepare("INSERT INTO GPS (Latitude, Longitude, Altitude, Velocity, UTCTime, Date, UPLYID) VALUES (?, ?, ?, ?, ?, ?, ?);");
+      $stmt->bind_param("ddddssd", $latitude, $longitude, $altitude, $velocity, $time, $date, $UPLYID);
+    }
     
-   // $query = $stmt->execute();
+    $query = $stmt->execute();
     // Check for erros
-   // if($query === TRUE)
-   //   echo "Change made successfully";
-   // else
-   //   echo "An error ocurred: ". $conn->error;
+    if($query === TRUE)
+      echo "Change made successfully";
+    else
+      echo "An error ocurred: ". $conn->error;
         
     // Close the connection
-    //$stmt->close();
+    $stmt->close();
     $conn->close();
     ?> 
   </body>
