@@ -83,7 +83,7 @@
     }
     */
     // Create connection and insert into table
-    $conn = new mysqli($hostname, $username, $password, $dbname);
+   // $conn = new mysqli($hostname, $username, $password, $dbname);
     
   //  if($table == "Openings")  {
   //    $stmt = $conn->prepare("INSERT INTO Openings (OpeningUTCTime, ClosingUTCTime, OpenedTime, Latitude, Longitude, Altitude, Date, UPLYID) VALUES (?, ?, ?, ?, ?, ?, ?, ?);");
@@ -103,7 +103,7 @@
         
     // Close the connection
     //$stmt->close();
-    $conn->close();
+ //   $conn->close();
     ?> 
   </body>
 </html>
