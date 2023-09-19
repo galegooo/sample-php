@@ -7,23 +7,17 @@
     $username = getenv("USERNAME");
     $password = getenv("PASSWORD");
     $port = getenv("DBPORT");
-    echo $HOSTNAME;
-    echo $DBNAME;
-    echo $USERNAME;
-    echo $PASSWORD;
-    echo $DBPORT;
+
     // GET variables (some are always included)
     $ID = $_GET["DeviceID"];
     $date = $_GET["DateTime"];
-    echo $ID;
-    echo $date;
+
     if($_GET["Distance"]) {
       $distance = $_GET["Distance"];
       $beaconID = $_GET["BeaconID"];
       $table = "FTM";    // Got table
     }
-    echo $distance;
-    echo $beaconID;
+
             
     // Create connection and insert into table
     $conn = new mysqli($hostname, $username, $password, $dbname, $port);
@@ -38,7 +32,7 @@
     $query = $stmt->execute();
     // Check for erros
     if($query === TRUE)
-      echo "Change made successfully";
+      echo "Database updated";
     else
       echo "An error ocurred: ". $conn->error;
         
