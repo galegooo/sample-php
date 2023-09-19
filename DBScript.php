@@ -26,14 +26,14 @@
     if($table == "FTM")  {
       $stmt = $conn->prepare("INSERT INTO FTM (DeviceID, DateTime, Distance, BeaconID) VALUES (?, ?, ?, ?);");
       $stmt->bind_param("ssds", $ID, $date, $distance, $beaconID);
-    }
+     }
     
     $query = $stmt->execute();
     // Check for erros
-    // if($query === TRUE)
-    //   echo "Change made successfully";
-    // else
-    //   echo "An error ocurred: ". $conn->error;
+    if($query === TRUE)
+      echo "Change made successfully";
+    else
+      echo "An error ocurred: ". $conn->error;
         
     // Close the connection
     $stmt->close();
