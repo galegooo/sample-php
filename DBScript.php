@@ -18,10 +18,10 @@
       $table = "FTM";    // Got table
     }
     else if($_GET["XAcceleration"])	{
-        $XAccel = $_GET["XAcceleration"];
-	$YAccel = $_GET["YAcceleration"];
-	$ZAccel = $_GET["ZAcceleration"];
-	$table = "Accelerometer";	// Got table
+      $XAccel = $_GET["XAcceleration"];
+      $YAccel = $_GET["YAcceleration"];
+      $ZAccel = $_GET["ZAcceleration"];
+      $table = "Accelerometer";	// Got table
     }
             
     // Create connection and insert into table
@@ -34,8 +34,8 @@
       $stmt->bind_param("ssds", $ID, $date, $distance, $beaconID);
     }
     else if($table == "Accelerometer")	{
-        $stmt = $conn->prepare("INSERT INTO Acceletometer (DeviceID, DateTime, XAcceleration, YAcceleration, ZAcceleration) VALUES (?, ?, ?, ?, ?)");
-	$stmt->bind_param("ssddd", $ID, $date, $XAccel, $YAccel, $ZAccel);
+      $stmt = $conn->prepare("INSERT INTO Acceletometer (DeviceID, DateTime, XAcceleration, YAcceleration, ZAcceleration) VALUES (?, ?, ?, ?, ?)");
+	    $stmt->bind_param("ssddd", $ID, $date, $XAccel, $YAccel, $ZAccel);
     }
     
     $query = $stmt->execute();
@@ -48,6 +48,14 @@
     // Close the connection
     $stmt->close();
     $conn->close();
+
+
+    // Start Python script to update tables
+    if($table == "Accelerometer")
+      $command = escapeshellcmd('python3 UpdateDB.py Accelerometer');
+    else if($table == "FTM")
+      $command = escapeshellcmd('python3 UpdateDB.py FTM');
+    $output = shell_exec($command);
     ?> 
   </body>
 </html>
