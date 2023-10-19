@@ -53,7 +53,7 @@
       $result = $conn->query($query);
 
       // Output data, should only be 1 row
-      if ($result->num_rows = 1) {
+      if ($result->num_rows == 1) {
         while($row = $result->fetch_assoc()) {
           $lastEntry = $row["Entry"];
           $lastTrackerID = $row["DeviceID"];
