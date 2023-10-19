@@ -7,22 +7,21 @@
 
     function getDirChanges($row, $lastXAccel, $lastYAccel, $lastTrackerID, $conn)  {
       //* Check for direction change, if last entry of this device has XAcceleration or YAcceleration with an opposite sign to what as just inserted, it's a change
-      echo "recent Xaccel was " . $lastXAccel . ", before that is " . $row["XAcceleration"] . "\n";
       if(($row["XAcceleration"] < 0 and $lastXAccel > 0) or ($row["XAcceleration"] > 0 and $lastXAccel < 0) or ($row["YAcceleration"] < 0 and $lastYAccel > 0) or ($row["YAcceleration"] > 0 and $lastYAccel < 0))  {
-        echo "found a direction change\n";
-        // Got a direction change, add to the DB
+        //* Got a direction change, add to the DB
         // First get current DirectionChanges value
         $query = "SELECT DirectionChanges FROM SessionStats WHERE DeviceID='{$lastTrackerID}';"; //! Should only be 1
         $currentDirChanges = $conn->query($query);
         $currentDirChanges = $currentDirChanges->fetch_assoc();
         echo $currentDirChanges["DirectionChanges"] . "\n";
         $currentDirChanges = $currentDirChanges["DirectionChanges"] + 1;
+        
         $stmt = $conn->prepare("UPDATE SessionStats SET DirectionChanges={$currentDirChanges} WHERE DeviceID='{$lastTrackerID}';");
         $stmt->execute();
       }
     }
 
-    function getAccelLevel($XAccel, $YAccel, $conn)  {
+    function getAccelLevel($XAccel, $YAccel, $conn, $lastTrackerID)  {
       $XAccelAbs = abs($XAccel);
       $YAccelAbs = abs($YAccel);
 
@@ -32,7 +31,6 @@
       $query = "SELECT CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3  FROM SessionStats WHERE DeviceID='{$lastTrackerID}';"; //! Should only be 1
       $results = $conn->query($query);
       $row = $results->fetch_assoc();
-      echo "sum is " . $accelSum;
 
       $currentCount1 = $row["CountAccelerationLevel1"];
       $currentCount2 = $row["CountAccelerationLevel2"];
