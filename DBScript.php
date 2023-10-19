@@ -57,7 +57,7 @@
         $row = $result->fetch_assoc();
         $lastEntry = $row["Entry"];
         $lastTrackerID = $row["DeviceID"];
-        $lastDateTime= $row["DateTime"];
+        $lastDateTime= $row["Datetime"];
         $lastXAccel = $row["XAcceleration"];
         $lastYAccel = $row["YAcceleration"];
         $lastZAccel = $row["ZAcceleration"];      
@@ -75,6 +75,7 @@
           // results are ordered by Entry, so first row is last inserted row of this trackerID
           echo "recent Xaccel was " . $lastXAccel . ", before that is " . $row["XAcceleration"];
           if(($row["XAcceleration"] < 0 and $lastXAccel > 0) or ($row["XAcceleration"] > 0 and $lastXAccel < 0) or ($row["YAcceleration"] < 0 and $lastYAccel > 0) or ($row["YAcceleration"] > 0 and $lastYAccel < 0))  {
+            echo "found a direction change";
             // Got a direction change, add to the DB
             // First get current DirectionChanges value
             $query = "SELECT DirectionChanges FROM SessionStats WHERE DeviceID='{$lastTrackerID}';"; //! Should only be 1
@@ -86,15 +87,16 @@
 
           //* Calculate avg velocity and acceleration in last minute
           // Check to see if this entry is within 1 minute of last one
-          $iterDateTime = $row["DateTime"];
+          $iterDateTime = $row["Datetime"];
           
           $iterDateTime = new DateTime($iterDateTime);
           $timeDiff = $iterDateTime->diff(new DateTime($lastDateTime));
-          echo "interval to +" . $iter . " is " . $timeDiff; 
+          echo "interval to +" . $iter . " is";
+          echo $timeDiff->format("s \s\\e\c\o\\n\d\s");
 
-          // if($timeDiff < 60)  {
-
-          // }
+          if($timeDiff < 60)  {
+            $avgVelocity = $avgVelocity + row["Velocity"];
+          }
         }
       }
       else {
