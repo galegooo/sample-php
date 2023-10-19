@@ -70,7 +70,7 @@
           // Check for direction change, if last entry of this device has XAcceleration or YAcceleration with an opposite sign to what as just inserted, it's a change
           // results are ordered by Entry, so first row is last inserted onw of this trackerID
           echo "recent Xaccel was " . $lastXAccel . ", last is " . $row["XAcceleration"]
-          if($row["XAcceleration"] < 0 && $lastXAccel > 0 || $row["XAcceleration"] > 0 && $lastXAccel < 0 || $row["YAcceleration"] < 0 && $lastYAccel > 0 || $row["YAcceleration"] > 0 && $lastYAccel < 0)  {
+          if(($row["XAcceleration"] < 0 and $lastXAccel > 0) or ($row["XAcceleration"] > 0 and $lastXAccel < 0) or ($row["YAcceleration"] < 0 and $lastYAccel > 0) or ($row["YAcceleration"] > 0 and $lastYAccel < 0))  {
             // Got a direction change, add to the DB
             // First get current DirectionChanges value
             $query = "SELECT DirectionChanges FROM SessionStats WHERE DeviceID={$lastTrackerID};"; //! Should only be 1
