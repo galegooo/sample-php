@@ -59,12 +59,12 @@
       // Output data, should only be 1 row
       if ($result->num_rows = 1) {
         while($row = $result->fetch_assoc()) {
-          $lastEntry = $row["Entry"]
-          $lastTrackerID = $row["DeviceID"]
-          $lastDateTime= $row["DateTime"]
-          $lastXAccel = $row["XAcceleration"]
-          $lastYAccel = $row["YAcceleration"]
-          $lastZAccel = $row["ZAcceleration"]        
+          $lastEntry = $row["Entry"];
+          $lastTrackerID = $row["DeviceID"];
+          $lastDateTime= $row["DateTime"];
+          $lastXAccel = $row["XAcceleration"];
+          $lastYAccel = $row["YAcceleration"];
+          $lastZAccel = $row["ZAcceleration"];   
 
           echo "lastEntry: " . $lastEntry;
         }
