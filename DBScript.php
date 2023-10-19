@@ -28,13 +28,28 @@
 
       $accelSum = $XAccelAbs + $YAccelAbs;
 
+      // Check number of counts this trackerID has
+      $query = "SELECT CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3  FROM SessionStats WHERE DeviceID='{$lastTrackerID}';"; //! Should only be 1
+      $results = $conn->query($query);
+      $row = $results->fetch_assoc();
+
+      $currentCount1 = $row["CountAccelerationLevel1"];
+      $currentCount2 = $row["CountAccelerationLevel2"];
+      $currentCount3 = $row["CountAccelerationLevel3"];
+
       // Check if sum of accelerations is higher than thresholds
-      if($accelSum >= ACCEL_1 and $accelSum < ACCEL_2)  
-        $stmt = $conn->prepare("UPDATE SessionStats SET CountAccelerationLevel1={$currentDirChanges} WHERE DeviceID='{$lastTrackerID}';");
-      else if($accelSum >= ACCEL_2 and $accelSum < ACCEL_3)  
-        $stmt = $conn->prepare("UPDATE SessionStats SET CountAccelerationLevel2={$currentDirChanges} WHERE DeviceID='{$lastTrackerID}';");
-      else if($accelSum >= ACCEL_3)  
-        $stmt = $conn->prepare("UPDATE SessionStats SET CountAccelerationLevel3={$currentDirChanges} WHERE DeviceID='{$lastTrackerID}';");
+      if($accelSum >= ACCEL_1 and $accelSum < ACCEL_2)  {
+        $count = $currentCount1 + 1;
+        $stmt = $conn->prepare("UPDATE SessionStats SET CountAccelerationLevel1={$count} WHERE DeviceID='{$lastTrackerID}';");
+      }
+      else if($accelSum >= ACCEL_2 and $accelSum < ACCEL_3) {
+        $count = $currentCount2 + 1;
+        $stmt = $conn->prepare("UPDATE SessionStats SET CountAccelerationLevel2={$count} WHERE DeviceID='{$lastTrackerID}';");
+      }
+      else if($accelSum >= ACCEL_3) {
+        $count = $currentCount3 + 1;
+        $stmt = $conn->prepare("UPDATE SessionStats SET CountAccelerationLevel3={$count} WHERE DeviceID='{$lastTrackerID}';");
+      }
       $stmt->execute();
     }
 
@@ -61,7 +76,7 @@
       $table = "Accelerometer";	// Got table
     }
             
-    // Create connection and insert into table
+    // Create connection to DB
     $conn = new mysqli($hostname, $username, $password, $dbname, $port);
     if ($conn->connect_error) 
       die("Connection failed: " . $conn->connect_error);
@@ -74,7 +89,6 @@
       $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, DateTime, XAcceleration, YAcceleration, ZAcceleration) VALUES (?, ?, ?, ?, ?)");
 	    $stmt->bind_param("ssddd", $ID, $date, $XAccel, $YAccel, $ZAccel);
     }
-    
     $query = $stmt->execute();
     // Check for erros
     //  if($query === TRUE)
@@ -85,7 +99,6 @@
 
     // Update other tables
     if($table == "Accelerometer") {# Last entry was in Accelerometer, check for direction change, average velocity and acceleration in last min, acceleration level, NumSprints
-      //$command = escapeshellcmd('python3 UpdateDB.py Accelerometer');
       $query = "SELECT * FROM Accelerometer WHERE Entry = (SELECT MAX(Entry) FROM Accelerometer);";
       $result = $conn->query($query);
 
@@ -98,12 +111,12 @@
         $lastXAccel = intval($row["XAcceleration"]);
         $lastYAccel = intval($row["YAcceleration"]);
         $lastZAccel = intval($row["ZAcceleration"]);
-        
-        getAccelLevel($lastXAccel, $lastYAccel, $conn);
 
         // Calculate things
         $query = "SELECT * FROM Accelerometer WHERE DeviceID='{$lastTrackerID}' ORDER BY Entry DESC;";
         $result = $conn->query($query);
+
+        getAccelLevel($lastXAccel, $lastYAccel, $conn, $lastTrackerID);
 
         $row = $result->fetch_assoc();  // Ignore the just inserted row
         $row = $result->fetch_assoc();  // Most recent entry after the current one
