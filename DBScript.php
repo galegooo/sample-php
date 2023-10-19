@@ -55,12 +55,12 @@
       // Output data, should only be 1 row
       if ($result->num_rows == 1) {
         $row = $result->fetch_assoc();
-        $lastEntry = $row["Entry"];
+        $lastEntry = intval($row["Entry"]);
         $lastTrackerID = $row["DeviceID"];
-        $lastDateTime= $row["Datetime"];
-        $lastXAccel = $row["XAcceleration"];
-        $lastYAccel = $row["YAcceleration"];
-        $lastZAccel = $row["ZAcceleration"];      
+        $lastDateTime= new DateTime($row["Datetime"]);
+        $lastXAccel = intval($row["XAcceleration"]);
+        $lastYAccel = intval($row["YAcceleration"]);
+        $lastZAccel = intval($row["ZAcceleration"]);      
 
         // Calculate things
         $query = "SELECT * FROM Accelerometer WHERE DeviceID='{$lastTrackerID}' ORDER BY Entry DESC;";
@@ -87,16 +87,17 @@
 
           //* Calculate avg velocity and acceleration in last minute
           // Check to see if this entry is within 1 minute of last one
-          $iterDateTime = $row["Datetime"];
-          
-          $iterDateTime = new DateTime($iterDateTime);
-          $timeDiff = $iterDateTime->diff(new DateTime($lastDateTime));
-          echo "interval to +" . $iter . " is";
+          $iterDateTime = new DateTime($row["Datetime"]);
+
+          $timeDiff = date_diff($iterDateTime, $lastDateTime);
+          echo "interval to +" . $iter . " is " . $timeDiff;
           echo $timeDiff->format("s \s\\e\c\o\\n\d\s");
 
-          if($timeDiff < 60)  {
-            $avgVelocity = $avgVelocity + row["Velocity"];
+          if(intval($timeDiff) < 60)  {
+            $avgVelocity = $avgVelocity;
           }
+
+          $iter = $iter + 1;
         }
       }
       else {
