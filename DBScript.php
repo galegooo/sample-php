@@ -6,9 +6,8 @@
     define("ACCEL_3", 3);
     define("HS_THRESHOLD", 25.2);
 
-    function getDirChangesAndNumSprints($lastDateTime, $result, $lastXAccel, $lastYAccel, $lastTrackerID, $conn)  {
+    function getDirChangesAndNumSprints($lastDateTime, $result, $lastXAccel, $lastYAccel, $lastTrackerID, $conn, $lastEntry)  {
       $row = $result->fetch_assoc();  // Next row (second most recent row, in this case)
-      echo "on getDirChanges, checking row with entry " . $row["Entry"];
 
       $secondLastXAccel = $row["XAcceleration"];
       $secondLastYAccel = $row["YAcceleration"];
@@ -27,12 +26,28 @@
 
       //* Check if velocity between last and second to last entry is above HS_THRESHOLD
       // First check time difference
-      $secondLastAccel = $secondLastXAccel + $secondLastYAccel;
-      $accelSum = $lastXAccel + $lastYAccel;
-
       $thisEntryDateTime = new DateTime($row["Datetime"]);
       $timeDiff = $lastDateTime->getTimestamp() - $thisEntryDateTime->getTimestamp();
-      echo "time diff is " . $timeDiff;
+
+      $accelSum = $lastXAccel + $lastYAccel;
+	    
+      // Get initial velocity and calculate current velocity
+      $initialVelocity = $row["Velocity"];
+      $velocity = $initialVelocity + ($accelSum * $timeDiff);
+
+      // Put this velocity in the current entry (up until now it should be -1)
+      $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity} WHERE Entry='{$lastEntry}';");
+
+      // If it's above the threshold, add it to NumSprints
+      if($velocity >= HS_THRESHOLD)	{
+        $query = "SELECT NumSprints FROM SessionStats WHERE DeviceID='{$lastTrackerID}';"; //! Should only be 1
+      	$results = $conn->query($query);
+      	$row = $results->fetch_assoc();
+
+	$numSprints = $row["NumSprints"] + 1;
+	$stmt = $conn->prepare("UPDATE SessionStats SET NumSprints={$numSprints} WHERE DeviceID='{$lastTrackerID}';");
+      }
+      $stmt->execute();
     }
 
     function getAccelLevel($XAccel, $YAccel, $conn, $lastTrackerID)  {
@@ -157,7 +172,7 @@
 
         $row = $result->fetch_assoc();  // Ignore the just inserted row
 
-        getDirChangesAndNumSprints($lastDateTime, $result, $lastXAccel, $lastYAccel, $lastTrackerID, $conn);
+        getDirChangesAndNumSprints($lastDateTime, $result, $lastXAccel, $lastYAccel, $lastTrackerID, $conn, $lastEntry);
         //getAvgVelocityAccel($result, $conn, $lastTrackerID, $lastXAccel, $lastYAccel, $lastDateTime);
       }
       else {
