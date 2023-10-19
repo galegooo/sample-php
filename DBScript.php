@@ -15,28 +15,28 @@
         $query = "SELECT DirectionChanges FROM SessionStats WHERE DeviceID='{$lastTrackerID}';"; //! Should only be 1
         $currentDirChanges = $conn->query($query);
         $currentDirChanges = $currentDirChanges->fetch_assoc();
-        echo $currentDirChanges . "\n";
-        $currentDirChanges = $currentDirChanges + 1;
+        echo $currentDirChanges["DirectionChanges"] . "\n";
+        $currentDirChanges = $currentDirChanges["DirectionChanges"] + 1;
         $stmt = $conn->prepare("UPDATE SessionStats SET DirectionChanges={$currentDirChanges} WHERE DeviceID='{$lastTrackerID}';");
         $stmt->execute();
       }
     }
 
-    // function getAccelLevel($XAccel, $YAccel)  {
-    //   $XAccelAbs = abs($XAccel);
-    //   $YAccelAbs = abs($YAccel);
+    function getAccelLevel($XAccel, $YAccel, $conn)  {
+      $XAccelAbs = abs($XAccel);
+      $YAccelAbs = abs($YAccel);
 
-    //   // Check if sum of accelerations is higher than thresholds
-    //   if($XAccelAbs + $YAccelAbs >= ACCEL_1 and $XAccelAbs + $YAccelAbs < ACCEL_2)  {
+      $accelSum = $XAccelAbs + $YAccelAbs;
 
-    //   }
-    //   else if($XAccelAbs + $YAccelAbs >= ACCEL_2 and $XAccelAbs + $YAccelAbs < ACCEL_3)  {
-
-    //   }
-    //   else if($XAccelAbs + $YAccelAbs >= ACCEL_3)  {
-
-    //   }
-    // }
+      // Check if sum of accelerations is higher than thresholds
+      if($accelSum >= ACCEL_1 and $accelSum < ACCEL_2)  
+        $stmt = $conn->prepare("UPDATE SessionStats SET CountAccelerationLevel1={$currentDirChanges} WHERE DeviceID='{$lastTrackerID}';");
+      else if($accelSum >= ACCEL_2 and $accelSum < ACCEL_3)  
+        $stmt = $conn->prepare("UPDATE SessionStats SET CountAccelerationLevel2={$currentDirChanges} WHERE DeviceID='{$lastTrackerID}';");
+      else if($accelSum >= ACCEL_3)  
+        $stmt = $conn->prepare("UPDATE SessionStats SET CountAccelerationLevel3={$currentDirChanges} WHERE DeviceID='{$lastTrackerID}';");
+      $stmt->execute();
+    }
 
     // Get key values for database connection
     $hostname = getenv("HOSTNAME");
@@ -99,7 +99,7 @@
         $lastYAccel = intval($row["YAcceleration"]);
         $lastZAccel = intval($row["ZAcceleration"]);
         
-        //getAccelLevel($lastXAccel, $lastYAccel);
+        getAccelLevel($lastXAccel, $lastYAccel, $conn);
 
         // Calculate things
         $query = "SELECT * FROM Accelerometer WHERE DeviceID='{$lastTrackerID}' ORDER BY Entry DESC;";
