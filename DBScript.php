@@ -44,10 +44,6 @@
     //    echo "Change made successfully";
     //  else
     //    echo "An error ocurred: ". $conn->error;
-        
-    // Close the connection
-    $stmt->close();
-    $conn->close();
 
 
     // Update other tables
@@ -78,6 +74,10 @@
     
 
     //$output = shell_exec($command);
+
+    // Close the connection
+    $stmt->close();
+    $conn->close();
     ?> 
   </body>
 </html>
