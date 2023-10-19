@@ -47,33 +47,51 @@
 
 
     // Update other tables
-    if($table == "Accelerometer")
+    if($table == "Accelerometer") {# Last entry was in Accelerometer, check for direction change, average velocity and acceleration in last min, acceleration level, NumSprints
       //$command = escapeshellcmd('python3 UpdateDB.py Accelerometer');
       $query = "SELECT * FROM Accelerometer WHERE Entry = (SELECT MAX(Entry) FROM Accelerometer);";
       $result = $conn->query($query);
 
       // Output data, should only be 1 row
       if ($result->num_rows == 1) {
-        while($row = $result->fetch_assoc()) {
-          $lastEntry = $row["Entry"];
-          $lastTrackerID = $row["DeviceID"];
-          $lastDateTime= $row["DateTime"];
-          $lastXAccel = $row["XAcceleration"];
-          $lastYAccel = $row["YAcceleration"];
-          $lastZAccel = $row["ZAcceleration"];   
+        $row = $result->fetch_assoc();
+        $lastEntry = $row["Entry"];
+        $lastTrackerID = $row["DeviceID"];
+        $lastDateTime= $row["DateTime"];
+        $lastXAccel = $row["XAcceleration"];
+        $lastYAccel = $row["YAcceleration"];
+        $lastZAccel = $row["ZAcceleration"];      
 
-          echo "lastEntry: " . $lastEntry;
+        // Calculate things
+        $query = "SELECT * FROM Accelerometer WHERE DeviceID={$lastTrackerID} ORDER BY Entry DESC;";
+        $result = $conn->query($query);
+
+        while($row = $result->fetch_assoc())  {
+          // Check for direction change, if last entry of this device has XAcceleration or YAcceleration with an opposite sign to what as just inserted, it's a change
+          // results are ordered by Entry, so first row is last inserted onw of this trackerID
+          echo "recent Xaccel was " . $lastXAccel . ", last is " . $row["XAcceleration"]
+          if($row["XAcceleration"] < 0 && $lastXAccel > 0 || $row["XAcceleration"] > 0 && $lastXAccel < 0 || $row["YAcceleration"] < 0 && $lastYAccel > 0 || $row["YAcceleration"] > 0 && $lastYAccel < 0)  {
+            // Got a direction change, add to the DB
+            // First get current DirectionChanges value
+            $query = "SELECT DirectionChanges FROM SessionStats WHERE DeviceID={$lastTrackerID};"; //! Should only be 1
+            $currentDirChanges = $conn->query($query);
+
+            $stmt = $conn->prepare("UPDATE Accelerometer SET DirectionChanges={$currentDirChanges + 1} WHERE DeviceID={$lastTrackerID};");
+            $stmt->execute();
+          }
         }
       }
       else {
         echo "Got " . $result->num_rows . "rows, expecting 1"; 
       }
+    }
     
     //else if($table == "FTM")
       //$command = escapeshellcmd('python3 UpdateDB.py FTM');
     
 
     //$output = shell_exec($command);
+
 
     // Close the connection
     $stmt->close();
