@@ -34,7 +34,7 @@
       $stmt->bind_param("ssds", $ID, $date, $distance, $beaconID);
     }
     else if($table == "Accelerometer")	{
-      $stmt = $conn->prepare("INSERT INTO Acceletometer (DeviceID, DateTime, XAcceleration, YAcceleration, ZAcceleration) VALUES (?, ?, ?, ?, ?)");
+      $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, DateTime, XAcceleration, YAcceleration, ZAcceleration) VALUES (?, ?, ?, ?, ?)");
 	    $stmt->bind_param("ssddd", $ID, $date, $XAccel, $YAccel, $ZAccel);
     }
     
