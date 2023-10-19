@@ -5,7 +5,7 @@
     $hostname = getenv("HOSTNAME");
     $dbname = getenv("DBNAME");
     $username = getenv("USERNAME");
-    $password = "AVNS_pUW1PjbbNkYyctEw7Ym";
+    $password = getenv("PASSWORD");
     $port = getenv("DBPORT");
     
     // GET variables (some are always included)
@@ -40,22 +40,44 @@
     
     $query = $stmt->execute();
     // Check for erros
-     if($query === TRUE)
-       echo "Change made successfully";
-     else
-       echo "An error ocurred: ". $conn->error;
+    //  if($query === TRUE)
+    //    echo "Change made successfully";
+    //  else
+    //    echo "An error ocurred: ". $conn->error;
         
     // Close the connection
     $stmt->close();
     $conn->close();
 
 
-    // Start Python script to update tables
+    // Update other tables
     if($table == "Accelerometer")
-      $command = escapeshellcmd('python3 UpdateDB.py Accelerometer');
-    else if($table == "FTM")
-      $command = escapeshellcmd('python3 UpdateDB.py FTM');
-    $output = shell_exec($command);
+      //$command = escapeshellcmd('python3 UpdateDB.py Accelerometer');
+      $query = "SELECT * FROM Accelerometer WHERE Entry = (SELECT MAX(Entry) FROM Accelerometer);"
+      $result = $conn->query($sql);
+
+      // Output data, should only be 1 row
+      if ($result->num_rows = 1) {
+        while($row = $result->fetch_assoc()) {
+          $lastEntry = $row["Entry"]
+          $lastTrackerID = $row["DeviceID"]
+          $lastDateTime= $row["DateTime"]
+          $lastXAccel = $row["XAcceleration"]
+          $lastYAccel = $row["YAcceleration"]
+          $lastZAccel = $row["ZAcceleration"]        
+
+          echo "lastEntry: " . $lastEntry;
+        }
+      }
+      else {
+        echo "Got " . $result->num_rows . "rows, expecting 1"; 
+      }
+    
+    //else if($table == "FTM")
+      //$command = escapeshellcmd('python3 UpdateDB.py FTM');
+    
+
+    //$output = shell_exec($command);
     ?> 
   </body>
 </html>
