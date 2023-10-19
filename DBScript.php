@@ -30,7 +30,7 @@
       $secondLastAccel = $secondLastXAccel + $secondLastYAccel;
       $accelSum = $lastXAccel + $lastYAccel;
 
-      $thisEntryDateTime = row["Datetime"];
+      $thisEntryDateTime = $row["Datetime"];
       $timeDiff = $lastDateTime->getTimestamp() - $thisEntryDateTime->getTimestamp();
       echo "time diff is " . $timeDiff;
     }
