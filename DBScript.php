@@ -54,7 +54,7 @@
     if($table == "Accelerometer")
       //$command = escapeshellcmd('python3 UpdateDB.py Accelerometer');
       $query = "SELECT * FROM Accelerometer WHERE Entry = (SELECT MAX(Entry) FROM Accelerometer);";
-      $result = $conn->query($sql);
+      $result = $conn->query($query);
 
       // Output data, should only be 1 row
       if ($result->num_rows = 1) {
