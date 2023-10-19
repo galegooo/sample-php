@@ -90,8 +90,8 @@
           $iterDateTime = new DateTime($row["Datetime"]);
 
           $timeDiff = date_diff($iterDateTime, $lastDateTime);
-          echo "interval to +" . $iter . " is " . $timeDiff;
-          echo $timeDiff->format("s \s\\e\c\o\\n\d\s");
+          echo "interval to +" . $iter . " is ";
+          echo date("Y/m/d h:i:s", $timeDiff);
 
           if(intval($timeDiff) < 60)  {
             $avgVelocity = $avgVelocity;
