@@ -1,6 +1,10 @@
 <html>
   <body>
     <?php
+    define("ACCEL_1", 1);
+    define("ACCEL_2", 2);
+    define("ACCEL_3", 3);
+
     function getDirChanges($row, $lastXAccel, $lastYAccel, $lastTrackerID, $conn)  {
       //* Check for direction change, if last entry of this device has XAcceleration or YAcceleration with an opposite sign to what as just inserted, it's a change
       echo "recent Xaccel was " . $lastXAccel . ", before that is " . $row["XAcceleration"] . "\n";
@@ -10,6 +14,7 @@
         // First get current DirectionChanges value
         $query = "SELECT DirectionChanges FROM SessionStats WHERE DeviceID='{$lastTrackerID}';"; //! Should only be 1
         $currentDirChanges = $conn->query($query);
+        $currentDirChanges = $currentDirChanges->fetch_assoc();
         echo $currentDirChanges . "\n";
         $currentDirChanges = $currentDirChanges + 1;
         $stmt = $conn->prepare("UPDATE SessionStats SET DirectionChanges={$currentDirChanges} WHERE DeviceID='{$lastTrackerID}';");
@@ -18,7 +23,19 @@
     }
 
     // function getAccelLevel($XAccel, $YAccel)  {
+    //   $XAccelAbs = abs($XAccel);
+    //   $YAccelAbs = abs($YAccel);
 
+    //   // Check if sum of accelerations is higher than thresholds
+    //   if($XAccelAbs + $YAccelAbs >= ACCEL_1 and $XAccelAbs + $YAccelAbs < ACCEL_2)  {
+
+    //   }
+    //   else if($XAccelAbs + $YAccelAbs >= ACCEL_2 and $XAccelAbs + $YAccelAbs < ACCEL_3)  {
+
+    //   }
+    //   else if($XAccelAbs + $YAccelAbs >= ACCEL_3)  {
+
+    //   }
     // }
 
     // Get key values for database connection
