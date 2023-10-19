@@ -32,6 +32,7 @@
       $query = "SELECT CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3  FROM SessionStats WHERE DeviceID='{$lastTrackerID}';"; //! Should only be 1
       $results = $conn->query($query);
       $row = $results->fetch_assoc();
+      echo "sum is " . $accelSum;
 
       $currentCount1 = $row["CountAccelerationLevel1"];
       $currentCount2 = $row["CountAccelerationLevel2"];
