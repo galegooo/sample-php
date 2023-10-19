@@ -25,11 +25,3 @@ if(sys.argv[1] == "Accelerometer"): # Last entry was in Accelerometer, check for
   lastXAccel = lastRow["XAcceleration"]
   lastYAccel = lastRow["YAcceleration"]
   lastZAccel = lastRow["ZAcceleration"]
-
-
-rows = [("FFFFFFFFFFFF", "2017/12/10 11:12:13", 2, -3, 5), ("DEADBEEF", "2018/09/01 01:00:02", 1, 2, -3)] 
-sql = "INSERT INTO Accelerometer (DeviceID, DateTime, XAcceleration, YAcceleration, ZAcceleration) VALUES (%s, %s, %s, %s, %s)"
-values = ["FFFFFFFFFFFF", "2017/12/10 11:11:11", 3, 3, 3]
-mycursor.execute(sql, values)
-
-mydb.commit()
