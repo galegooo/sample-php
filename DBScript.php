@@ -6,6 +6,7 @@
     $dbname = getenv("DBNAME");
     $username = getenv("USERNAME");
     $password = getenv("PASSWORD");
+    echo $password;
     $port = getenv("DBPORT");
     
     // GET variables (some are always included)
