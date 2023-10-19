@@ -15,7 +15,7 @@
         $currentDirChanges = $currentDirChanges->fetch_assoc();
         echo $currentDirChanges["DirectionChanges"] . "\n";
         $currentDirChanges = $currentDirChanges["DirectionChanges"] + 1;
-        
+
         $stmt = $conn->prepare("UPDATE SessionStats SET DirectionChanges={$currentDirChanges} WHERE DeviceID='{$lastTrackerID}';");
         $stmt->execute();
       }
@@ -125,21 +125,20 @@
         $avgAccel = 0;
         $iter = 1;
         while($row = $result->fetch_assoc())  {
-          
-
           //* Calculate avg velocity and acceleration in last minute
           // Check to see if this entry is within 1 minute of last one
-          $iterDateTime = new DateTime($row["Datetime"]);
+          //TODO
+          // $iterDateTime = new DateTime($row["Datetime"]);
 
-          $timeDiff = date_diff($iterDateTime, $lastDateTime);
-          echo "interval to +" . $iter . " is ";
-          echo date("Y/m/d h:i:s", $timeDiff);
+          // $timeDiff = date_diff($iterDateTime, $lastDateTime);
+          // echo "interval to +" . $iter . " is ";
+          // echo date("Y/m/d h:i:s", $timeDiff);
 
-          if(intval($timeDiff) < 60)  {
-            $avgVelocity = $avgVelocity;
-          }
+          // if(intval($timeDiff) < 60)  {
+          //   $avgVelocity = $avgVelocity;
+          // }
 
-          $iter = $iter + 1;
+          // $iter = $iter + 1;
         }
       }
       else {
