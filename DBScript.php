@@ -4,12 +4,16 @@
     define("ACCEL_1", 1);
     define("ACCEL_2", 2);
     define("ACCEL_3", 3);
+    define("HS_THRESHOLD", 25.2);
 
-    function getDirChanges($result, $lastXAccel, $lastYAccel, $lastTrackerID, $conn)  {
+    function getDirChangesAndNumSprints($lastDateTime, $result, $lastXAccel, $lastYAccel, $lastTrackerID, $conn)  {
       $row = $result->fetch_assoc();  // Next row (second most recent row, in this case)
       echo "on getDirChanges, checking row with entry " . $row["Entry"];
+
+      $secondLastXAccel = $row["XAcceleration"];
+      $secondLastYAccel = $row["YAcceleration"];
       //* Check for direction change, if second most recent entry of this device has XAcceleration or YAcceleration with an opposite sign to what as just inserted, it's a change
-      if(($row["XAcceleration"] < 0 and $lastXAccel > 0) or ($row["XAcceleration"] > 0 and $lastXAccel < 0) or ($row["YAcceleration"] < 0 and $lastYAccel > 0) or ($row["YAcceleration"] > 0 and $lastYAccel < 0))  {
+      if(($secondLastXAccel < 0 and $lastXAccel > 0) or ($secondLastXAccel > 0 and $lastXAccel < 0) or ($secondLastYAccel < 0 and $lastYAccel > 0) or ($secondLastYAccel > 0 and $lastYAccel < 0))  {
         //* Got a direction change, add to the DB
         // First get current DirectionChanges value
         $query = "SELECT DirectionChanges FROM SessionStats WHERE DeviceID='{$lastTrackerID}';"; //! Should only be 1
@@ -20,6 +24,15 @@
         $stmt = $conn->prepare("UPDATE SessionStats SET DirectionChanges={$currentDirChanges} WHERE DeviceID='{$lastTrackerID}';");
         $stmt->execute();
       }
+
+      //* Check if velocity between last and second to last entry is above HS_THRESHOLD
+      // First check time difference
+      $secondLastAccel = $secondLastXAccel + $secondLastYAccel;
+      $accelSum = $lastXAccel + $lastYAccel;
+
+      $thisEntryDateTime = row["Datetime"];
+      $timeDiff = $lastDateTime->getTimestamp() - $thisEntryDateTime->getTimestamp();
+      echo "time diff is " . $timeDiff;
     }
 
     function getAccelLevel($XAccel, $YAccel, $conn, $lastTrackerID)  {
@@ -29,7 +42,7 @@
       $accelSum = $XAccelAbs + $YAccelAbs;
 
       // Check number of counts this trackerID has
-      $query = "SELECT CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3  FROM SessionStats WHERE DeviceID='{$lastTrackerID}';"; //! Should only be 1
+      $query = "SELECT CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3 FROM SessionStats WHERE DeviceID='{$lastTrackerID}';"; //! Should only be 1
       $results = $conn->query($query);
       $row = $results->fetch_assoc();
 
@@ -73,17 +86,6 @@
 
         $iter = $iter + 1;
         }
-    }
-
-    function getNumSprints($conn, $result, $lastXAccel, $lastYAccel, $lastTrackerID, $lastDateTime)  {
-      $row = $result->fetch_assoc();  // Next row (second most recent row, in this case)
-      echo "on getNumSprints, checking row with entry " . $row["Entry"];
-      $secondLastXAccel = $row["XAcceleration"];
-      $secondLastYAccel = $row["YAcceleration"];
-      $secondLastAccel = $secondLastXAccel + $secondLastYAccel;
-
-      $accelSum = $lastXAccel + $lastYAccel;
-      $diffAccel = $accelSum - $secondLastAccel;
     }
 
 
@@ -155,9 +157,8 @@
 
         $row = $result->fetch_assoc();  // Ignore the just inserted row
 
-        getDirChanges($result, $lastXAccel, $lastYAccel, $lastTrackerID, $conn);
+        getDirChangesAndNumSprints($lastDateTime, $result, $lastXAccel, $lastYAccel, $lastTrackerID, $conn);
         //getAvgVelocityAccel($result, $conn, $lastTrackerID, $lastXAccel, $lastYAccel, $lastDateTime);
-        getNumSprints($conn, $result, $lastXAccel, $lastYAccel, $lastTrackerID, $lastDateTime);
       }
       else {
         echo "Got " . $result->num_rows . "rows, expecting 1"; 
