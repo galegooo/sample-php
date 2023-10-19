@@ -1,12 +1,13 @@
 import mysql.connector
 import sys
+import os
 
 mydb = mysql.connector.connect(
-  host="db-mysql-foxg1-do-user-13438623-0.b.db.ondigitalocean.com",
-  user="foxg1",
-  password="AVNS_6ut_FF66GOpU8kNb2Kq",
-  database="defaultdb",
-  port=25060
+  host=os.environ["HOSTNAME"],
+  user=os.environ["USERNAME"],
+  password=os.environ["PASSWORD"],
+  database=os.environ["DBNAME"],
+  port=os.environ["DBPORT"]
 )
 
 mycursor = mydb.cursor()
