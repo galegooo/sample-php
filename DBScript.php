@@ -5,16 +5,17 @@
     define("ACCEL_2", 2);
     define("ACCEL_3", 3);
 
-    function getDirChanges($row, $lastXAccel, $lastYAccel, $lastTrackerID, $conn)  {
-      //* Check for direction change, if last entry of this device has XAcceleration or YAcceleration with an opposite sign to what as just inserted, it's a change
+    function getDirChanges($result, $lastXAccel, $lastYAccel, $lastTrackerID, $conn)  {
+      $row = $result->fetch_assoc();  // Next row (second most recent row, in this case)
+      echo "on getDirChanges, checking row with entry " . $row["Entry"];
+      //* Check for direction change, if second most recent entry of this device has XAcceleration or YAcceleration with an opposite sign to what as just inserted, it's a change
       if(($row["XAcceleration"] < 0 and $lastXAccel > 0) or ($row["XAcceleration"] > 0 and $lastXAccel < 0) or ($row["YAcceleration"] < 0 and $lastYAccel > 0) or ($row["YAcceleration"] > 0 and $lastYAccel < 0))  {
         //* Got a direction change, add to the DB
         // First get current DirectionChanges value
         $query = "SELECT DirectionChanges FROM SessionStats WHERE DeviceID='{$lastTrackerID}';"; //! Should only be 1
         $currentDirChanges = $conn->query($query);
         $currentDirChanges = $currentDirChanges->fetch_assoc();
-        echo $currentDirChanges["DirectionChanges"] . "\n";
-        $currentDirChanges = $currentDirChanges["DirectionChanges"] + 1;
+        $currentDirChanges = $currentDirChanges["DirectionChanges"] + 1;  // Increment it
 
         $stmt = $conn->prepare("UPDATE SessionStats SET DirectionChanges={$currentDirChanges} WHERE DeviceID='{$lastTrackerID}';");
         $stmt->execute();
@@ -51,6 +52,40 @@
       }
       $stmt->execute();
     }
+
+    function getAvgVelocityAccel($result, $conn, $lastTrackerID, $lastXAccel, $lastYAccel, $lastDateTime) {
+      $avgVelocity = 0;
+      $avgAccel = 0;
+      $iter = 1;
+
+      while($row = $result->fetch_assoc())  {
+        echo "on getAvgVelocityAccel, checking row with entry " . $row["Entry"];
+        //* Calculate avg velocity and acceleration in last minute
+        // Check to see if this entry is within 1 minute of last one
+        $thisEntryDateTime = new DateTime($row["Datetime"]);
+
+        $timeDiff = $lastDateTime->getTimestamp() - $thisEntryDateTime->getTimestamp();
+        echo "interval to +" . $iter . " is " . $timeDiff;
+
+        if(intval($timeDiff) < 60)  {
+          $avgVelocity = $avgVelocity;
+        }
+
+        $iter = $iter + 1;
+        }
+    }
+
+    function getNumSprints($conn, $result, $lastXAccel, $lastYAccel, $lastTrackerID, $lastDateTime)  {
+      $row = $result->fetch_assoc();  // Next row (second most recent row, in this case)
+      echo "on getNumSprints, checking row with entry " . $row["Entry"];
+      $secondLastXAccel = $row["XAcceleration"];
+      $secondLastYAccel = $row["YAcceleration"];
+      $secondLastAccel = $secondLastXAccel + $secondLastYAccel;
+
+      $accelSum = $lastXAccel + $lastYAccel;
+      $diffAccel = $accelSum - $secondLastAccel;
+    }
+
 
     // Get key values for database connection
     $hostname = getenv("HOSTNAME");
@@ -111,45 +146,25 @@
         $lastYAccel = intval($row["YAcceleration"]);
         $lastZAccel = intval($row["ZAcceleration"]);
 
+        // Get levels of acceleration, ignoring ZAccel
+        getAccelLevel($lastXAccel, $lastYAccel, $conn, $lastTrackerID);
+
         // Calculate things
         $query = "SELECT * FROM Accelerometer WHERE DeviceID='{$lastTrackerID}' ORDER BY Entry DESC;";
         $result = $conn->query($query);
 
-        getAccelLevel($lastXAccel, $lastYAccel, $conn, $lastTrackerID);
-
         $row = $result->fetch_assoc();  // Ignore the just inserted row
-        $row = $result->fetch_assoc();  // Most recent entry after the current one
-        getDirChanges($row, $lastXAccel, $lastYAccel, $lastTrackerID, $conn);
 
-        $avgVelocity = 0;
-        $avgAccel = 0;
-        $iter = 1;
-        while($row = $result->fetch_assoc())  {
-          //* Calculate avg velocity and acceleration in last minute
-          // Check to see if this entry is within 1 minute of last one
-          //TODO
-          // $iterDateTime = new DateTime($row["Datetime"]);
-
-          // $timeDiff = date_diff($iterDateTime, $lastDateTime);
-          // echo "interval to +" . $iter . " is ";
-          // echo date("Y/m/d h:i:s", $timeDiff);
-
-          // if(intval($timeDiff) < 60)  {
-          //   $avgVelocity = $avgVelocity;
-          // }
-
-          // $iter = $iter + 1;
-        }
+        getDirChanges($result, $lastXAccel, $lastYAccel, $lastTrackerID, $conn);
+        //getAvgVelocityAccel($result, $conn, $lastTrackerID, $lastXAccel, $lastYAccel, $lastDateTime);
+        getNumSprints($conn, $result, $lastXAccel, $lastYAccel, $lastTrackerID, $lastDateTime);
       }
       else {
         echo "Got " . $result->num_rows . "rows, expecting 1"; 
       }
     }
     //else if($table == "FTM")
-      //$command = escapeshellcmd('python3 UpdateDB.py FTM');
-    
-
-    //$output = shell_exec($command);
+      //TODO algoritmo
 
 
     // Close the connection
