@@ -1,6 +1,25 @@
 <html>
   <body>
     <?php
+    function getDirChanges($row, $lastXAccel, $lastYAccel, $lastTrackerID, $conn)  {
+      //* Check for direction change, if last entry of this device has XAcceleration or YAcceleration with an opposite sign to what as just inserted, it's a change
+      echo "recent Xaccel was " . $lastXAccel . ", before that is " . $row["XAcceleration"];
+      if(($row["XAcceleration"] < 0 and $lastXAccel > 0) or ($row["XAcceleration"] > 0 and $lastXAccel < 0) or ($row["YAcceleration"] < 0 and $lastYAccel > 0) or ($row["YAcceleration"] > 0 and $lastYAccel < 0))  {
+        echo "found a direction change";
+        // Got a direction change, add to the DB
+        // First get current DirectionChanges value
+        $query = "SELECT DirectionChanges FROM SessionStats WHERE DeviceID='{$lastTrackerID}';"; //! Should only be 1
+        $currentDirChanges = $conn->query($query);
+        $currentDirChanges = intval($currentDirChanges) + 1;
+        $stmt = $conn->prepare("UPDATE Accelerometer SET DirectionChanges={$currentDirChanges} WHERE DeviceID='{$lastTrackerID}';");
+        $stmt->execute();
+      }
+    }
+
+    // function getAccelLevel($XAccel, $YAccel)  {
+
+    // }
+
     // Get key values for database connection
     $hostname = getenv("HOSTNAME");
     $dbname = getenv("DBNAME");
@@ -60,30 +79,23 @@
         $lastDateTime= new DateTime($row["Datetime"]);
         $lastXAccel = intval($row["XAcceleration"]);
         $lastYAccel = intval($row["YAcceleration"]);
-        $lastZAccel = intval($row["ZAcceleration"]);      
+        $lastZAccel = intval($row["ZAcceleration"]);
+        
+        //getAccelLevel($lastXAccel, $lastYAccel);
 
         // Calculate things
         $query = "SELECT * FROM Accelerometer WHERE DeviceID='{$lastTrackerID}' ORDER BY Entry DESC;";
         $result = $conn->query($query);
 
+        $row = $result->fetch_assoc();  // Ignore the just inserted row
+        $row = $result->fetch_assoc();  // Most recent entry after the current one
+        getDirChanges($row, $lastXAccel, $lastYAccel, $lastTrackerID, $conn);
+
         $avgVelocity = 0;
         $avgAccel = 0;
         $iter = 1;
-        $row = $result->fetch_assoc();  // Ignore the just inserted row
         while($row = $result->fetch_assoc())  {
-          //* Check for direction change, if last entry of this device has XAcceleration or YAcceleration with an opposite sign to what as just inserted, it's a change
-          // results are ordered by Entry, so first row is last inserted row of this trackerID
-          echo "recent Xaccel was " . $lastXAccel . ", before that is " . $row["XAcceleration"];
-          if(($row["XAcceleration"] < 0 and $lastXAccel > 0) or ($row["XAcceleration"] > 0 and $lastXAccel < 0) or ($row["YAcceleration"] < 0 and $lastYAccel > 0) or ($row["YAcceleration"] > 0 and $lastYAccel < 0))  {
-            echo "found a direction change";
-            // Got a direction change, add to the DB
-            // First get current DirectionChanges value
-            $query = "SELECT DirectionChanges FROM SessionStats WHERE DeviceID='{$lastTrackerID}';"; //! Should only be 1
-            $currentDirChanges = $conn->query($query);
-            $currentDirChanges = intval($currentDirChanges[0]) + 1;
-            $stmt = $conn->prepare("UPDATE Accelerometer SET DirectionChanges={$currentDirChanges} WHERE DeviceID='{$lastTrackerID}';");
-            $stmt->execute();
-          }
+          
 
           //* Calculate avg velocity and acceleration in last minute
           // Check to see if this entry is within 1 minute of last one
