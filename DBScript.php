@@ -80,7 +80,7 @@
             // First get current DirectionChanges value
             $query = "SELECT DirectionChanges FROM SessionStats WHERE DeviceID='{$lastTrackerID}';"; //! Should only be 1
             $currentDirChanges = $conn->query($query);
-            $currentDirChanges = $currentDirChanges + 1;
+            $currentDirChanges = intval($currentDirChanges[0]) + 1;
             $stmt = $conn->prepare("UPDATE Accelerometer SET DirectionChanges={$currentDirChanges} WHERE DeviceID='{$lastTrackerID}';");
             $stmt->execute();
           }
