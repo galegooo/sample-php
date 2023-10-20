@@ -138,7 +138,8 @@
     }
     else if($table == "Accelerometer")	{
       $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, DateTime, XAcceleration, YAcceleration, ZAcceleration, Velocity) VALUES (?, ?, ?, ?, ?, ?)");
-	    $stmt->bind_param("ssdddd", $ID, $date, $XAccel, $YAccel, $ZAccel, -1); // Velocity is -1 for now, to be calculated later
+      $velocity = -1;
+	    $stmt->bind_param("ssdddd", $ID, $date, $XAccel, $YAccel, $ZAccel, $velocity); // Velocity is -1 for now, to be calculated later
     }
     $query = $stmt->execute();
     // Check for erros
