@@ -113,7 +113,7 @@
     
     // GET variables (some are always included)
     $ID = $_GET["DeviceID"];
-    $date = $_GET["DateTime"];
+    $date = $_GET["Datetime"];
     
     if($_GET["Distance"]) {
       $distance = $_GET["Distance"];
@@ -133,11 +133,11 @@
       die("Connection failed: " . $conn->connect_error);
 
     if($table == "FTM")  {
-      $stmt = $conn->prepare("INSERT INTO FTM (DeviceID, DateTime, Distance, BeaconID) VALUES (?, ?, ?, ?);");
+      $stmt = $conn->prepare("INSERT INTO FTM (DeviceID, Datetime, Distance, BeaconID) VALUES (?, ?, ?, ?);");
       $stmt->bind_param("ssds", $ID, $date, $distance, $beaconID);
     }
     else if($table == "Accelerometer")	{
-      $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, DateTime, XAcceleration, YAcceleration, ZAcceleration, Velocity) VALUES (?, ?, ?, ?, ?, ?)");
+      $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, Datetime, XAcceleration, YAcceleration, ZAcceleration, Velocity) VALUES (?, ?, ?, ?, ?, ?)");
       $velocity = -1;
 	    $stmt->bind_param("ssdddd", $ID, $date, $XAccel, $YAccel, $ZAccel, $velocity); // Velocity is -1 for now, to be calculated later
     }
