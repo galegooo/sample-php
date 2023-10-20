@@ -33,7 +33,11 @@
 	    
       // Get initial velocity and calculate current velocity
       $initialVelocity = $row["Velocity"];
+      echo "initial velocity is " . $initialVelocity;
+      echo "accelSum is " . $accelSum;
+      echo "timeDiff is " . $timeDiff;
       $velocity = $initialVelocity + ($accelSum * $timeDiff);
+      echo "calculated velocity is " . $velocity;
 
       // Put this velocity in the current entry (up until now it should be -1)
       $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity} WHERE Entry='{$lastEntry}';");
