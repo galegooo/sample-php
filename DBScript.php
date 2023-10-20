@@ -41,6 +41,7 @@
 
       // Put this velocity in the current entry (up until now it should be -1)
       $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity} WHERE Entry='{$lastEntry}';");
+      $stmt->execute();
 
       // If it's above the threshold, add it to NumSprints
       if(abs($velocity) >= HS_THRESHOLD)	{
