@@ -20,7 +20,7 @@
 
         if($currentDirChanges->num_rows == 0)	{
           // No SessionStats for this DeviceID, create new
-          $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ({$lastTrackerID}, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 'TEST', 0, 0, 0, 0, 0, 0, 0);");
+          $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$lastTrackerID}', 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 'TEST', 0, 0, 0, 0, 0, 0, 0);");
         }
         else  {
           $currentDirChanges = $currentDirChanges->fetch_assoc();
@@ -53,7 +53,7 @@
 
         if($results->num_rows == 0)	{
           // No SessionStats for this DeviceID, create new
-          $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ({$lastTrackerID}, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'TEST', 0, 0, 0, 1, 0, 0, 0);");
+          $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$lastTrackerID}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'TEST', 0, 0, 0, 1, 0, 0, 0);");
           $stmt->execute();
         }
         else  {
@@ -80,7 +80,7 @@
 
         if($results->num_rows == 0)	{
           // No SessionStats for this DeviceID, create new
-          $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ({$lastTrackerID}, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 'TEST', 0, 0, 0, 0, 0, 0, 0);");
+          $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$lastTrackerID}', 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 'TEST', 0, 0, 0, 0, 0, 0, 0);");
         }
         else  {
           $row = $results->fetch_assoc();
@@ -97,7 +97,7 @@
 
         if($results->num_rows == 0)	{
           // No SessionStats for this DeviceID, create new
-          $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ({$lastTrackerID}, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 'TEST', 0, 0, 0, 0, 0, 0, 0);");
+          $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$lastTrackerID}', 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 'TEST', 0, 0, 0, 0, 0, 0, 0);");
         }
         else  {
           $row = $results->fetch_assoc();
@@ -114,7 +114,7 @@
 
         if($results->num_rows == 0)	{
           // No SessionStats for this DeviceID, create new
-          $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ({$lastTrackerID}, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 'TEST', 0, 0, 0, 0, 0, 0, 0);");
+          $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$lastTrackerID}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 'TEST', 0, 0, 0, 0, 0, 0, 0);");
         }
         else  {
           $row = $results->fetch_assoc();
