@@ -39,13 +39,13 @@
       $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity} WHERE Entry='{$lastEntry}';");
 
       // If it's above the threshold, add it to NumSprints
-      if($velocity >= HS_THRESHOLD)	{
+      if(abs($velocity) >= HS_THRESHOLD)	{
         $query = "SELECT NumSprints FROM SessionStats WHERE DeviceID='{$lastTrackerID}';"; //! Should only be 1
       	$results = $conn->query($query);
       	$row = $results->fetch_assoc();
 
-	$numSprints = $row["NumSprints"] + 1;
-	$stmt = $conn->prepare("UPDATE SessionStats SET NumSprints={$numSprints} WHERE DeviceID='{$lastTrackerID}';");
+	      $numSprints = $row["NumSprints"] + 1;
+	      $stmt = $conn->prepare("UPDATE SessionStats SET NumSprints={$numSprints} WHERE DeviceID='{$lastTrackerID}';");
       }
       $stmt->execute();
     }
@@ -100,7 +100,7 @@
         }
 
         $iter = $iter + 1;
-        }
+      }
     }
 
 
@@ -137,8 +137,8 @@
       $stmt->bind_param("ssds", $ID, $date, $distance, $beaconID);
     }
     else if($table == "Accelerometer")	{
-      $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, DateTime, XAcceleration, YAcceleration, ZAcceleration) VALUES (?, ?, ?, ?, ?)");
-	    $stmt->bind_param("ssddd", $ID, $date, $XAccel, $YAccel, $ZAccel);
+      $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, DateTime, XAcceleration, YAcceleration, ZAcceleration, Velocity) VALUES (?, ?, ?, ?, ?, ?)");
+	    $stmt->bind_param("ssdddd", $ID, $date, $XAccel, $YAccel, $ZAccel, -1); // Velocity is -1 for now, to be calculated later
     }
     $query = $stmt->execute();
     // Check for erros
@@ -165,6 +165,8 @@
 
         // Get levels of acceleration, ignoring ZAccel
         getAccelLevel($lastXAccel, $lastYAccel, $conn, $lastTrackerID);
+
+	      //TODO here check if there is any more rows, might be the first
 
         // Calculate things
         $query = "SELECT * FROM Accelerometer WHERE DeviceID='{$lastTrackerID}' ORDER BY Entry DESC;";
