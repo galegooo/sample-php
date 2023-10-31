@@ -7,7 +7,7 @@
     define("HS_THRESHOLD", 25.2);
 
     function getDirChangesAndNumSprints($date, $result, $XAccel, $YAccel, $ID, $conn, $entry)  {
-      $query = "SELECT * FROM Accelerometer WHERE DeviceID='{$ID}' ORDER BY Datetime;";
+      $query = "SELECT * FROM Accelerometer WHERE DeviceID='{$ID}' ORDER BY Datetime DESC;";
       $result = $conn->query($query);
 
       if ($result->num_rows == 1) {
@@ -20,12 +20,13 @@
         do {
           $row = $result->fetch_assoc();
           $currentEntry = $row["Entry"];
-	  echo "on row with entry" . $currentEntry;
+	  echo "on row with entry" . $currentEntry . "\n";
         } while($currentEntry != $entry);
 
+	echo "done\n";
         $row = $result->fetch_assoc();  // Check next row, the chronologically previous one
 	$currentEntry = $row["Entry"];
-	echo "on row with entry" . $currentEntry;
+	echo "on row with entry" . $currentEntry . "\n";
         $currentXAccel = $row["XAcceleration"];
         $currentYAccel = $row["YAcceleration"];
         //* Check for direction change, if second most recent entry of this device has XAcceleration or YAcceleration with an opposite sign to what as just inserted, it's a change
