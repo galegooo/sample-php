@@ -20,13 +20,10 @@
         do {
           $row = $result->fetch_assoc();
           $currentEntry = $row["Entry"];
-	  echo "on row with entry" . $currentEntry . "\n";
         } while($currentEntry != $entry);
 
-	echo "done\n";
         $row = $result->fetch_assoc();  // Check next row, the chronologically previous one
-	$currentEntry = $row["Entry"];
-	echo "on row with entry" . $currentEntry . "\n";
+
         $currentXAccel = $row["XAcceleration"];
         $currentYAccel = $row["YAcceleration"];
         //* Check for direction change, if second most recent entry of this device has XAcceleration or YAcceleration with an opposite sign to what as just inserted, it's a change
@@ -56,11 +53,14 @@
         $date = new DateTime($date);
         $timeDiff = $date->getTimestamp() - $currentDatetime->getTimestamp();
 
+        //* Do median value between current accel and last entry accel
         $accelSum = $XAccel + $YAccel;
+        $currentAccelSum = $currentXAccel + $currentYAccel
+        $medianAccel = ($accelSum + $currentAccelSum) / 2
         
         // Get initial velocity and calculate current velocity
         $initialVelocity = $row["Velocity"];
-        $velocity = $initialVelocity + ($accelSum * $timeDiff);
+        $velocity = $initialVelocity + ($medianAccel * $timeDiff);
 
         // Put this velocity in the current entry (up until now it should be -1)
         $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity} WHERE Entry='{$entry}';");
@@ -228,7 +228,6 @@
 
     // Update tables
     if($table == "Accelerometer") {# Last entry was in Accelerometer, check for direction change, average velocity and acceleration in last min, acceleration level, NumSprints
-      //$query = "SELECT * FROM Accelerometer WHERE Entry = (SELECT MAX(Entry) FROM Accelerometer ORDER BY Datetime);";
       $query = "SELECT Entry FROM Accelerometer WHERE DeviceID='{$ID}' AND Datetime='{$date}' AND XAcceleration={$XAccel} AND ZAcceleration={$ZAccel} AND Velocity=-1;";  //! not using YAccel because for some reason the SQL query didn't work
       $result = $conn->query($query);
 
@@ -236,16 +235,10 @@
       if ($result->num_rows == 1) {
         $row = $result->fetch_assoc();
         $entry = intval($row["Entry"]);
-        // $lastTrackerID = $row["DeviceID"];
-        // $lastDateTime= new DateTime($row["Datetime"]);
-        // $lastXAccel = intval($row["XAcceleration"]);
-        // $lastYAccel = intval($row["YAcceleration"]);
-        // $lastZAccel = intval($row["ZAcceleration"]);
 
         // Get levels of acceleration, ignoring ZAccel
         getAccelLevel($XAccel, $YAccel, $conn, $ID);
 
-        //getDirChangesAndNumSprints($lastDateTime, $result, $lastXAccel, $lastYAccel, $lastTrackerID, $conn, $lastEntry);
         getDirChangesAndNumSprints($date, $result, $XAccel, $YAccel, $ID, $conn, $entry);
         //getAvgVelocityAccel($result, $conn, $lastTrackerID, $lastXAccel, $lastYAccel, $lastDateTime);
       }
