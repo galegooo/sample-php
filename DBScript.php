@@ -54,8 +54,8 @@
         $timeDiff = $date->getTimestamp() - $currentDatetime->getTimestamp();
 
         //* Do median value between current accel and last entry accel
-        $accelSum = $XAccel + $YAccel;
-        $currentAccelSum = $currentXAccel + $currentYAccel
+        $accelSum = sqrt(pow($XAccel, 2) + pow($YAccel, 2));
+        $currentAccelSum = sqrt(pow($currentXAccel, 2) + pow($currentYAccel, 2))
         $medianAccel = ($accelSum + $currentAccelSum) / 2
         
         // Get initial velocity and calculate current velocity
