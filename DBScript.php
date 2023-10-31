@@ -20,10 +20,12 @@
         do {
           $row = $result->fetch_assoc();
           $currentEntry = $row["Entry"];
+	  echo "on row with entry" . $currentEntry;
         } while($currentEntry != $entry);
 
         $row = $result->fetch_assoc();  // Check next row, the chronologically previous one
-
+	$currentEntry = $row["Entry"];
+	echo "on row with entry" . $currentEntry;
         $currentXAccel = $row["XAcceleration"];
         $currentYAccel = $row["YAcceleration"];
         //* Check for direction change, if second most recent entry of this device has XAcceleration or YAcceleration with an opposite sign to what as just inserted, it's a change
