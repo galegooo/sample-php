@@ -189,7 +189,7 @@
     
     // GET variables (some are always included)
     $ID = $_GET["DeviceID"];
-    $date = $_GET["Datetime"];
+    $date = new DateTime($_GET["Datetime"]);
     
     if($_GET["Distance"]) {
       $distance = $_GET["Distance"];
