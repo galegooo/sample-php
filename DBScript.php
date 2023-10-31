@@ -53,6 +53,7 @@
         //* Check if velocity between last and second to last entry is above HS_THRESHOLD
         // First check time difference
         $currentDatetime = new DateTime($row["Datetime"]);
+        $date = new DateTime($date);
         $timeDiff = $date->getTimestamp() - $currentDatetime->getTimestamp();
 
         $accelSum = $XAccel + $YAccel;
@@ -189,7 +190,7 @@
     
     // GET variables (some are always included)
     $ID = $_GET["DeviceID"];
-    $date = new DateTime($_GET["Datetime"]);
+    $date = $_GET["Datetime"];
     
     if($_GET["Distance"]) {
       $distance = $_GET["Distance"];
