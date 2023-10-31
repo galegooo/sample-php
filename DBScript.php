@@ -225,7 +225,7 @@
     // Update tables
     if($table == "Accelerometer") {# Last entry was in Accelerometer, check for direction change, average velocity and acceleration in last min, acceleration level, NumSprints
       //$query = "SELECT * FROM Accelerometer WHERE Entry = (SELECT MAX(Entry) FROM Accelerometer ORDER BY Datetime);";
-      $query = "SELECT Entry FROM Accelerometer WHERE DeviceID='{$ID}' AND Datetime='{$date}' AND XAcceleration={$XAccel} AND YAcceleration={$YAccel} AND ZAcceleration={$ZAccel};";
+      $query = "SELECT Entry FROM Accelerometer WHERE DeviceID='{$ID}' AND Datetime='{$date}' AND XAcceleration={$XAccel} AND ZAcceleration={$ZAccel} AND Velocity=-1;";  //! not using YAccel because for some reason the SQL query didn't work
       $result = $conn->query($query);
 
       // Output data, should only be 1 row
