@@ -185,40 +185,62 @@
     $hostname = getenv("HOSTNAME");
     $dbname = getenv("DBNAME");
     $username = getenv("USERNAME");
-    $password = "AVNS_pUW1PjbbNkYyctEw7Ym";
+    $password = getenv("PASS");
     $port = getenv("DBPORT");
-    
-    // GET variables (some are always included)
-    $ID = $_GET["DeviceID"];
-    $date = $_GET["Datetime"];
-    
-    if($_GET["Distance"]) {
-      $distance = $_GET["Distance"];
-      $beaconID = $_GET["BeaconID"];
-      $table = "FTM";    // Got table
-    }
-    else if($_GET["XAcceleration"])	{
-      $XAccel = $_GET["XAcceleration"];
-      $YAccel = $_GET["YAcceleration"];
-      $ZAccel = $_GET["ZAcceleration"];
-      $table = "Accelerometer";	// Got table
-    }
-            
-    // Create connection to DB
-    $conn = new mysqli($hostname, $username, $password, $dbname, $port);
-    if ($conn->connect_error) 
-      die("Connection failed: " . $conn->connect_error);
 
-    if($table == "FTM")  {
-      $stmt = $conn->prepare("INSERT INTO FTM (DeviceID, Datetime, Distance, BeaconID) VALUES (?, ?, ?, ?);");
-      $stmt->bind_param("ssds", $ID, $date, $distance, $beaconID);
+    $data = json_decode(file_get_contents('php://input'), true);
+    print_r($data);
+
+    // Get POST
+    if($_POST["FTM"]) {
+      print_r("ye we in FTM");
+      $FTM = array();
+      $table = "FTM";    // Got table
+
+      
+      //$distance = $_GET["Distance"];  CHANGE
+      //$beaconID = $_GET["BeaconID"];
+      
     }
-    else if($table == "Accelerometer")	{
-      $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, Datetime, XAcceleration, YAcceleration, ZAcceleration, Velocity) VALUES (?, ?, ?, ?, ?, ?)");
-      $velocity = -1;
-	    $stmt->bind_param("ssdddd", $ID, $date, $XAccel, $YAccel, $ZAccel, $velocity); // Velocity is -1 for now, to be calculated later
+    else if ($_POST["Accelerometer"]) {
+      $Accelerometer = array();
+      print_r("ye we in Accel");
+      $table = "Accelerometer";    // Got table
+
     }
-    $query = $stmt->execute();
+
+
+    // GET variables (some are always included)
+    // $ID = $_GET["DeviceID"];
+    // $date = $_GET["Datetime"];
+    
+    // if($_GET["Distance"]) {
+    //   $distance = $_GET["Distance"];
+    //   $beaconID = $_GET["BeaconID"];
+    //   $table = "FTM";    // Got table
+    // }
+    // else if($_GET["XAcceleration"])	{
+    //   $XAccel = $_GET["XAcceleration"];
+    //   $YAccel = $_GET["YAcceleration"];
+    //   $ZAccel = $_GET["ZAcceleration"];
+    //   $table = "Accelerometer";	// Got table
+    // }
+            
+    // // Create connection to DB
+    // $conn = new mysqli($hostname, $username, $password, $dbname, $port);
+    // if ($conn->connect_error) 
+    //   die("Connection failed: " . $conn->connect_error);
+
+    // if($table == "FTM")  {
+    //   $stmt = $conn->prepare("INSERT INTO FTM (DeviceID, Datetime, Distance, BeaconID) VALUES (?, ?, ?, ?);");
+    //   $stmt->bind_param("ssds", $ID, $date, $distance, $beaconID);
+    // }
+    // else if($table == "Accelerometer")	{
+    //   $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, Datetime, XAcceleration, YAcceleration, ZAcceleration, Velocity) VALUES (?, ?, ?, ?, ?, ?)");
+    //   $velocity = -1;
+	  //   $stmt->bind_param("ssdddd", $ID, $date, $XAccel, $YAccel, $ZAccel, $velocity); // Velocity is -1 for now, to be calculated later
+    // }
+    // $query = $stmt->execute();
     // Check for erros
     //  if($query === TRUE)
     //    echo "Change made successfully";
@@ -227,25 +249,25 @@
 
 
     // Update tables
-    if($table == "Accelerometer") {# Last entry was in Accelerometer, check for direction change, average velocity and acceleration in last min, acceleration level, NumSprints
-      $query = "SELECT Entry FROM Accelerometer WHERE DeviceID='{$ID}' AND Datetime='{$date}' AND XAcceleration={$XAccel} AND ZAcceleration={$ZAccel} AND Velocity=-1;";  //! not using YAccel because for some reason the SQL query didn't work
-      $result = $conn->query($query);
+    // if($table == "Accelerometer") {# Last entry was in Accelerometer, check for direction change, average velocity and acceleration in last min, acceleration level, NumSprints
+    //   $query = "SELECT Entry FROM Accelerometer WHERE DeviceID='{$ID}' AND Datetime='{$date}' AND XAcceleration={$XAccel} AND ZAcceleration={$ZAccel} AND Velocity=-1;";  //! not using YAccel because for some reason the SQL query didn't work
+    //   $result = $conn->query($query);
 
-      // Output data, should only be 1 row
-      if ($result->num_rows == 1) {
-        $row = $result->fetch_assoc();
-        $entry = intval($row["Entry"]);
+    //   // Output data, should only be 1 row
+    //   if ($result->num_rows == 1) {
+    //     $row = $result->fetch_assoc();
+    //     $entry = intval($row["Entry"]);
 
-        // Get levels of acceleration, ignoring ZAccel
-        getAccelLevel($XAccel, $YAccel, $conn, $ID);
+    //     // Get levels of acceleration, ignoring ZAccel
+    //     getAccelLevel($XAccel, $YAccel, $conn, $ID);
 
-        getDirChangesAndNumSprints($date, $result, $XAccel, $YAccel, $ID, $conn, $entry);
-        //getAvgVelocityAccel($result, $conn, $lastTrackerID, $lastXAccel, $lastYAccel, $lastDateTime);
-      }
-      else {
-        echo "Got " . $result->num_rows . "rows, expecting 1"; 
-      }
-    }
+    //     getDirChangesAndNumSprints($date, $result, $XAccel, $YAccel, $ID, $conn, $entry);
+    //     //getAvgVelocityAccel($result, $conn, $lastTrackerID, $lastXAccel, $lastYAccel, $lastDateTime);
+    //   }
+    //   else {
+    //     echo "Got " . $result->num_rows . "rows, expecting 1"; 
+    //   }
+    // }
     //else if($table == "FTM")
       //TODO algoritmo
 
