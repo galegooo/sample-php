@@ -192,22 +192,22 @@
     print_r($data);
 
     // Get POST
-    if($_POST["FTM"]) {
-      print_r("ye we in FTM");
-      $FTM = array();
-      $table = "FTM";    // Got table
+    //if($_POST["FTM"]) {
+    //  print_r("ye we in FTM");
+    //  $FTM = array();
+    //  $table = "FTM";    // Got table
 
       
       //$distance = $_GET["Distance"];  CHANGE
       //$beaconID = $_GET["BeaconID"];
       
-    }
-    else if ($_POST["Accelerometer"]) {
-      $Accelerometer = array();
-      print_r("ye we in Accel");
-      $table = "Accelerometer";    // Got table
+    //}
+    //else if ($_POST["Accelerometer"]) {
+    //  $Accelerometer = array();
+    //  print_r("ye we in Accel");
+    //  $table = "Accelerometer";    // Got table
 
-    }
+    //}
 
 
     // GET variables (some are always included)
@@ -273,7 +273,7 @@
 
 
     // Close the connection
-    $stmt->close();
+    //$stmt->close();
     $conn->close();
     ?> 
   </body>
