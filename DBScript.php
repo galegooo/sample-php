@@ -188,8 +188,11 @@
     $password = getenv("PASS");
     $port = getenv("DBPORT");
 
-    $data = json_decode(file_get_contents('php://input'));
-    echo $data;
+    $data = file_get_contents('php://input');
+    echo "data is " . $data;
+
+    $json = json_decode($data);
+    echo "json_decode is " . $json;
 
     // Get POST
     //if($_POST["FTM"]) {
