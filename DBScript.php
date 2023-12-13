@@ -274,7 +274,7 @@
 
     // Close the connection
     //$stmt->close();
-    $conn->close();
+    //$conn->close();
     ?> 
   </body>
 </html>
