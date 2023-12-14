@@ -192,8 +192,8 @@
     echo "data is " . $data;
 
     $json = json_decode($data);
-    echo "json_decode is " . $json;
-
+    echo "bruh is " . $json->bruh;
+    echo "nepia is " . $json->nepia;
     // Get POST
     //if($_POST["FTM"]) {
     //  print_r("ye we in FTM");
