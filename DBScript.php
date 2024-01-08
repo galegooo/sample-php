@@ -189,10 +189,10 @@
     $port = getenv("DBPORT");
 
     $data = file_get_contents('php://input');
-    $json = json_decode($data);
+    //$json = json_decode($data);
     print_r($data);
-    echo "bruh is " . $json->bruh;
-    echo "nepia is " . $json->nepia;
+    echo "bruh is " . $data->bruh;
+    echo "nepia is " . $data->nepia;
     // Get POST
     if($_POST["FTM"]) {
       print_r("ye we in FTM");
