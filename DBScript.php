@@ -190,51 +190,55 @@
 
     $data = file_get_contents('php://input');
     $json = json_decode($data);
-    //print_r($data);
-    //echo "bruh is " . $json->bruh;
-    //echo "nepia is " . $json->nepia;
-    // Get POST
-    if($_POST["FTM"]) {
-      print_r("ye we in FTM");
-      echo "ftm";
-      $FTM = array();
+
+    // Get JSON data
+    if($json->FTM) {
+      $FTM = $json->FTM;
       $table = "FTM";    // Got table
+      $FTMinput = array();
 
+      // Get all JSON entries and store them in FTMinput
+      foreach($FTM as $FTMdata)  {
+        $tempData = array();
+
+        $deviceID = $FTMdata->DeviceID;
+        $datetime = $FTMdata->Datetime;
+        $distance = $FTMdata->Distance;
+        $beaconID = $FTMdata->BeaconID;
+
+        array_push($tempData, $deviceID, $datetime, $distance, $beaconID);
+        array_push($FTMinput, $tempData);
+      }
       
-      //$distance = $_GET["Distance"];  CHANGE
-      //$beaconID = $_GET["BeaconID"];
-      
+      echo "FTMinput is" . $FTMinput;
     }
-    else if ($_POST["Accelerometer"]) {
-      $Accelerometer = array();
-      print_r("ye we in Accel");
-      echo "accel";
+    else if ($json->Accelerometer) {
+      $Accelerometer = $json->Accelerometer;
       $table = "Accelerometer";    // Got table
+      $Accelinput = array();
 
-    }
-    else if($json->FTM){
-    	echo "FTM com json";
+      foreach($Accelerometer as $Acceldata)  {
+        $tempData = array();
+
+        $deviceID = $Acceldata->DeviceID;
+        $datetime = $Acceldata->Datetime;
+        $XAccel = $Acceldata->XAcceleration;
+        $YAccel = $Acceldata->YAcceleration;
+        $ZAccel = $Acceldata->ZAcceleration;
+        $velocity = $Acceldata->Velocity;   // This is always -1
+
+        array_push($tempData, $deviceID, $XAccel, $YAccel, $ZAccel, $velocity);
+        array_push($Accelinput, $tempData);
+      }
+
+      echo "Accelinput is" . $Accelinput;
     }
     else {
-        echo "nope";
+      echo "Failed to find table name";
     }
 
 
-    // GET variables (some are always included)
-    // $ID = $_GET["DeviceID"];
-    // $date = $_GET["Datetime"];
-    
-    // if($_GET["Distance"]) {
-    //   $distance = $_GET["Distance"];
-    //   $beaconID = $_GET["BeaconID"];
-    //   $table = "FTM";    // Got table
-    // }
-    // else if($_GET["XAcceleration"])	{
-    //   $XAccel = $_GET["XAcceleration"];
-    //   $YAccel = $_GET["YAcceleration"];
-    //   $ZAccel = $_GET["ZAcceleration"];
-    //   $table = "Accelerometer";	// Got table
-    // }
+
             
     // // Create connection to DB
     // $conn = new mysqli($hostname, $username, $password, $dbname, $port);
