@@ -212,8 +212,11 @@
       $table = "Accelerometer";    // Got table
 
     }
+    else if($json->FTM){
+    	echo "FTM com json";
+    }
     else {
-    	echo "didnt find it";
+        echo "nope";
     }
 
 
