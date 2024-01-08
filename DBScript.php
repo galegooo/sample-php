@@ -210,7 +210,7 @@
         array_push($FTMinput, $tempData);
       }
       
-      print_r($FTMinput$);
+      print_r($FTMinput);
     }
     else if ($json->Accelerometer) {
       $Accelerometer = $json->Accelerometer;
@@ -231,7 +231,7 @@
         array_push($Accelinput, $tempData);
       }
 
-      print_r($Accelinput$);
+      print_r($Accelinput);
     }
     else {
       echo "Failed to find table name";
