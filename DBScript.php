@@ -210,7 +210,7 @@
         array_push($FTMinput, $tempData);
       }
       
-      echo "FTMinput is" . implode(" ", $FTMinput);
+      echo implode(" ", $FTMinput);
     }
     else if ($json->Accelerometer) {
       $Accelerometer = $json->Accelerometer;
@@ -231,7 +231,7 @@
         array_push($Accelinput, $tempData);
       }
 
-      echo "Accelinput is" . implode(" ", $Accelinput);
+      echo implode(" ", $Accelinput);
     }
     else {
       echo "Failed to find table name";
