@@ -188,10 +188,11 @@
     $password = getenv("PASS");
     $port = getenv("DBPORT");
 
-    $data = json_decode(file_get_contents('php://input'));
+    $data = file_get_contents('php://input');
+    $json = json_decode($data);
     print_r($data);
-    echo "bruh is " . $data->bruh;
-    echo "nepia is " . $data->nepia;
+    echo "bruh is " . $json->bruh;
+    echo "nepia is " . $json->nepia;
     // Get POST
     if($_POST["FTM"]) {
       print_r("ye we in FTM");
