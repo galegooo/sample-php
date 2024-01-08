@@ -188,29 +188,26 @@
     $password = getenv("PASS");
     $port = getenv("DBPORT");
 
-    $data = file_get_contents('php://input');
-    echo "data is " . $data;
+    $data = json_decode(file_get_contents('php://input'), true);
+    print_r($data);
 
-    $json = json_decode($data);
-    echo "bruh is " . $json->bruh;
-    echo "nepia is " . $json->nepia;
     // Get POST
-    //if($_POST["FTM"]) {
-    //  print_r("ye we in FTM");
-    //  $FTM = array();
-    //  $table = "FTM";    // Got table
+    if($_POST["FTM"]) {
+      print_r("ye we in FTM");
+      $FTM = array();
+      $table = "FTM";    // Got table
 
       
       //$distance = $_GET["Distance"];  CHANGE
       //$beaconID = $_GET["BeaconID"];
       
-    //}
-    //else if ($_POST["Accelerometer"]) {
-    //  $Accelerometer = array();
-    //  print_r("ye we in Accel");
-    //  $table = "Accelerometer";    // Got table
+    }
+    else if ($_POST["Accelerometer"]) {
+      $Accelerometer = array();
+      print_r("ye we in Accel");
+      $table = "Accelerometer";    // Got table
 
-    //}
+    }
 
 
     // GET variables (some are always included)
@@ -276,8 +273,8 @@
 
 
     // Close the connection
-    //$stmt->close();
-    //$conn->close();
+    $stmt->close();
+    $conn->close();
     ?> 
   </body>
 </html>
