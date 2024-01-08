@@ -190,12 +190,13 @@
 
     $data = file_get_contents('php://input');
     $json = json_decode($data);
-    print_r($data);
-    echo "bruh is " . $json->bruh;
-    echo "nepia is " . $json->nepia;
+    //print_r($data);
+    //echo "bruh is " . $json->bruh;
+    //echo "nepia is " . $json->nepia;
     // Get POST
     if($_POST["FTM"]) {
       print_r("ye we in FTM");
+      echo "ftm";
       $FTM = array();
       $table = "FTM";    // Got table
 
@@ -207,8 +208,12 @@
     else if ($_POST["Accelerometer"]) {
       $Accelerometer = array();
       print_r("ye we in Accel");
+      echo "accel";
       $table = "Accelerometer";    // Got table
 
+    }
+    else {
+    	echo "didnt find it";
     }
 
 
