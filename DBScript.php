@@ -244,7 +244,7 @@
     if($table == "FTM")  {
       $stmt = $conn->prepare("INSERT INTO FTM (DeviceID, Datetime, Distance, BeaconID) VALUES (?, ?, ?, ?);");
 
-      foreach($entry in $FTMinput)  {
+      foreach($entry as $FTMinput)  {
         $stmt->bind_param("ssds", $ID, $date, $distance, $beaconID);
         $stmt->execute();
       }
