@@ -190,7 +190,7 @@
 
     $data = file_get_contents('php://input');
     $json = json_decode($data);
-    file_put_contents( "php://stderr", data);
+    file_put_contents( "php://stderr", $data);
     // Get JSON data
     if($json->FTM) {
       $FTM = $json->FTM;
