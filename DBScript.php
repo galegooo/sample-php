@@ -190,7 +190,7 @@
 
     $data = file_get_contents('php://input');
     $json = json_decode($data);
-    
+    file_put_contents( "php://stderr", data);
     // Get JSON data
     if($json->FTM) {
       $FTM = $json->FTM;
@@ -244,7 +244,7 @@
     if($table == "FTM")  {
       $stmt = $conn->prepare("INSERT INTO FTM (DeviceID, Datetime, Distance, BeaconID) VALUES (?, ?, ?, ?);");
 
-      foreach($entry as $FTMinput)  {
+      foreach($entry in $FTMinput)  {
         $stmt->bind_param("ssds", $ID, $date, $distance, $beaconID);
         $stmt->execute();
       }
@@ -252,7 +252,7 @@
     else if($table == "Accelerometer")	{
       $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, Datetime, XAcceleration, YAcceleration, ZAcceleration, Velocity) VALUES (?, ?, ?, ?, ?, ?)");
 
-      foreach($entry as $Accelinput)  {
+      foreach($entry in $Accelinput)  {
         $stmt->bind_param("ssdddd", $ID, $date, $XAccel, $YAccel, $ZAccel, $velocity);
         $stmt->execute();
       }
