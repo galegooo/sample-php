@@ -190,7 +190,9 @@
 
     $data = file_get_contents('php://input');
     $json = json_decode($data);
-
+    <script>
+    	console.log(<?= echo $data; ?>);
+    </script>
     // Get JSON data
     if($json->FTM) {
       $FTM = $json->FTM;
