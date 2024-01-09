@@ -244,7 +244,7 @@
     if($table == "FTM")  {
       $stmt = $conn->prepare("INSERT INTO FTM (DeviceID, Datetime, Distance, BeaconID) VALUES (?, ?, ?, ?);");
 
-      foreach($entry in $FTMinput)  {
+      foreach($entry as $FTMinput)  {
         $stmt->bind_param("ssds", $ID, $date, $distance, $beaconID);
         $stmt->execute();
       }
@@ -252,7 +252,7 @@
     else if($table == "Accelerometer")	{
       $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, Datetime, XAcceleration, YAcceleration, ZAcceleration, Velocity) VALUES (?, ?, ?, ?, ?, ?)");
 
-      foreach($entry in $Accelinput)  {
+      foreach($entry as $Accelinput)  {
         $stmt->bind_param("ssdddd", $ID, $date, $XAccel, $YAccel, $ZAccel, $velocity);
         $stmt->execute();
       }
