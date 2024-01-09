@@ -1,4 +1,4 @@
-<html>
+  <html>
   <body>
     <?php
     define("ACCEL_1", 1);
@@ -190,7 +190,7 @@
 
     $data = file_get_contents('php://input');
     $json = json_decode($data);
-    echo $data;
+    
     // Get JSON data
     if($json->FTM) {
       $FTM = $json->FTM;
@@ -209,8 +209,6 @@
         array_push($tempData, $deviceID, $datetime, $distance, $beaconID);
         array_push($FTMinput, $tempData);
       }
-      
-      print_r($FTMinput);
     }
     else if ($json->Accelerometer) {
       $Accelerometer = $json->Accelerometer;
@@ -230,32 +228,38 @@
         array_push($tempData, $deviceID, $XAccel, $YAccel, $ZAccel, $velocity);
         array_push($Accelinput, $tempData);
       }
-
-      print_r($Accelinput);
     }
     else {
       echo "Failed to find table name";
     }
 
 
+    // Create connection to DB
+    $conn = new mysqli($hostname, $username, $password, $dbname, $port);
+    if ($conn->connect_error) 
+      die("Connection failed: " . $conn->connect_error);
 
-            
-    // // Create connection to DB
-    // $conn = new mysqli($hostname, $username, $password, $dbname, $port);
-    // if ($conn->connect_error) 
-    //   die("Connection failed: " . $conn->connect_error);
+    // Start transaction
+    $conn->begin_transaction();
+    if($table == "FTM")  {
+      $stmt = $conn->prepare("INSERT INTO FTM (DeviceID, Datetime, Distance, BeaconID) VALUES (?, ?, ?, ?);");
 
-    // if($table == "FTM")  {
-    //   $stmt = $conn->prepare("INSERT INTO FTM (DeviceID, Datetime, Distance, BeaconID) VALUES (?, ?, ?, ?);");
-    //   $stmt->bind_param("ssds", $ID, $date, $distance, $beaconID);
-    // }
-    // else if($table == "Accelerometer")	{
-    //   $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, Datetime, XAcceleration, YAcceleration, ZAcceleration, Velocity) VALUES (?, ?, ?, ?, ?, ?)");
-    //   $velocity = -1;
-	  //   $stmt->bind_param("ssdddd", $ID, $date, $XAccel, $YAccel, $ZAccel, $velocity); // Velocity is -1 for now, to be calculated later
-    // }
+      foreach($entry in $FTMinput)  {
+        $stmt->bind_param("ssds", $ID, $date, $distance, $beaconID);
+        $stmt->execute();
+      }
+    }
+    else if($table == "Accelerometer")	{
+      $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, Datetime, XAcceleration, YAcceleration, ZAcceleration, Velocity) VALUES (?, ?, ?, ?, ?, ?)");
+
+      foreach($entry in $Accelinput)  {
+        $stmt->bind_param("ssdddd", $ID, $date, $XAccel, $YAccel, $ZAccel, $velocity);
+        $stmt->execute();
+      }
+    }
+    $conn->commit();
     // $query = $stmt->execute();
-    // Check for erros
+    // // Check for erros
     //  if($query === TRUE)
     //    echo "Change made successfully";
     //  else
@@ -282,8 +286,8 @@
     //     echo "Got " . $result->num_rows . "rows, expecting 1"; 
     //   }
     // }
-    //else if($table == "FTM")
-      //TODO algoritmo
+    // else if($table == "FTM")
+    //   //TODO algoritmo
 
 
     // Close the connection
