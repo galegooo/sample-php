@@ -15,7 +15,7 @@
         $row = $result->fetch_assoc();
         $deviceID = $row["DeviceID"];
 
-        if(array_search($deviceID, IDs) == false) // Add it to the list if a new MAC is found
+        if(array_search($deviceID, $IDs) == false) // Add it to the list if a new MAC is found
           array_push($IDs, $deviceID);
       }
 
