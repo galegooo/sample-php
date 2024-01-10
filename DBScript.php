@@ -6,7 +6,7 @@
     define("ACCEL_3", 3);
     define("HS_THRESHOLD", 25.2);
 
-    function getDirChangesAndNumSprints($conn, $entry, $lastEntry)  {
+    function getVelDirChangesSprints($conn, $entry, $lastEntry)  {
       $IDs = array();
       // Check all new entries, get different DeviceIDs
       for ($iter = $entry; $iter <= $lastEntry; $iter++)  {
@@ -34,20 +34,21 @@
           // Ignore rows until one with Entry >= $entry
           do {
             $row = $result->fetch_assoc();
-            $currentEntry = $row["Entry"];
-            if($currentEntry < $entry) {
-              $previousXAccel = $row["XAcceleration"];  // Keep this for future comparison
-              $previousYAccel = $row["YAcceleration"];
-              $previousDatetime = $row["Datetime"];
-              $previousVelocity = $row["Velocity"];
+            $rowEntry = $row["Entry"];
+            if($rowEntry < $entry) {
+              $previousXAccel = floatval($row["XAcceleration"]);  // Keep this for future comparison
+              $previousYAccel = floatval($row["YAcceleration"]);
+              $previousDatetime = new DateTime($row["Datetime"]);
+              $previousVelocity = floatval($row["Velocity"]);
             }
-          } while($currentEntry < $entry);
+          } while($rowEntry < $entry);
   
 
-          for ($iter = $entry; $iter <= $entry + $result->num_rows - 1; $iter++)  {
-            $currentXAccel = $row["XAcceleration"];
-            $currentYAccel = $row["YAcceleration"];
-            //* Check for direction change, if previous entry of this device has XAcceleration or YAcceleration with an opposite sign to the current one, it's a change
+          for ($iter = $rowEntry; $iter <= $rowEntry + $result->num_rows - 1; $iter++)  {
+            $currentEntry = $row["Entry"];
+            $currentXAccel = floatval($row["XAcceleration"]);
+            $currentYAccel = floatval($row["YAcceleration"]);
+            //* Check for direction change, if previous entry of this device had XAcceleration or YAcceleration with an opposite sign to the current one, it's a change
             if(($currentXAccel < 0 and $previousXAccel > 0) or ($currentXAccel > 0 and $previousXAccel < 0) or ($currentYAccel < 0 and $previousYAccel > 0) or ($currentYAccel > 0 and $previousYAccel < 0))  {
               //* Got a direction change, add to the DB
               // First get current DirectionChanges value
@@ -71,7 +72,6 @@
             //* Check if velocity between last and current entry is above HS_THRESHOLD
             // First check time difference
             $currentDatetime = new DateTime($row["Datetime"]);
-            $previousDatetime = new DateTime($previousDatetime);
             $timeDiff = $currentDatetime->getTimestamp() - $previousDatetime->getTimestamp();
     
             //* Do median value between current accel and last entry accel
@@ -83,35 +83,41 @@
             $velocity = $previousVelocity + ($medianAccel * $timeDiff);
     
             //* Put this velocity in the current entry (up until now it should be -1)
-            $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity} WHERE Entry='{$entry}';");
+            $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity} WHERE Entry='{$currentEntry}';");
             $stmt->execute();
     
             // If it's above the threshold, add it to NumSprints
             if(abs($velocity) >= HS_THRESHOLD)	{
-              $query = "SELECT NumSprints FROM SessionStats WHERE DeviceID='{$ID}';"; //! Should only be 1
+              $query = "SELECT NumSprints FROM SessionStats WHERE DeviceID='{$deviceID}';"; //! Should only be 1 or 0
               $results = $conn->query($query);
     
               if($results->num_rows == 0)	{
                 // No SessionStats for this DeviceID, create new
                 //TODO needs to fetch name
-                $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$ID}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'TEST', 0, 0, 0, 1, 0, 0, 0);");
+                $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$deviceID}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '{$deviceID}', 0, 0, 0, 1, 0, 0, 0);");
                 $stmt->execute();
               }
               else  {
                 $row = $results->fetch_assoc();
     
                 $numSprints = $row["NumSprints"] + 1;
-                $stmt = $conn->prepare("UPDATE SessionStats SET NumSprints={$numSprints} WHERE DeviceID='{$ID}';");
+                $stmt = $conn->prepare("UPDATE SessionStats SET NumSprints={$numSprints} WHERE DeviceID='{$deviceID}';");
                 $stmt->execute();
               }
             }
+
+            // Get ready for next entry
+            $previousXAccel = $currentXAccel;
+            $previousYAccel = $currentYAccel
+            $previousDatetime = $currentDatetime;
+            $previousVelocity = $velocity;
           }
         }
       }
     }
 
     function getAccelLevels($conn, $entry, $lastEntry)  {
-      for ($iter = $entry; $iter <= $lastEntry; $iter++)  {
+      for ($iter = $entry; $iter <= $lastEntry, $iter++)  {
         // Get next row
         $query = "SELECT DeviceID, XAcceleration, YAcceleration FROM Accelerometer WHERE Entry='{$iter}';"; //! Not using ZAcceleration
         $result = $conn->query($query);
@@ -292,12 +298,6 @@
       }
     }
     $conn->commit();
-    // $query = $stmt->execute();
-    // // Check for erros
-    //  if($query === TRUE)
-    //    echo "Change made successfully";
-    //  else
-    //    echo "An error ocurred: ". $conn->error;
 
 
     // Update tables
@@ -311,10 +311,10 @@
         $row = $result->fetch_assoc();
         $entry = intval($row["Entry"]);
         $lastEntry = $entry + sizeof($Accelinput) - 1;
+
         // Get levels of acceleration
         getAccelLevels($conn, $entry, $lastEntry);
-
-        getDirChangesAndNumSprints($conn, $entry, $lastEntry);
+        getVelDirChangesSprints($conn, $entry, $lastEntry);
         //getAvgVelocityAccel($result, $conn, $lastTrackerID, $lastXAccel, $lastYAccel, $lastDateTime);
       }
       else {
