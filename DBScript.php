@@ -9,7 +9,7 @@
     function getDirChangesAndNumSprints($conn, $entry, $lastEntry)  {
       $IDs = array();
       // Check all new entries, get different DeviceIDs
-      for ($iter = $entry; $iter <= $lastEntry, $iter++)  {
+      for ($iter = $entry; $iter <= $lastEntry; $iter++)  {
         $query = "SELECT DeviceID FROM Accelerometer WHERE Entry='{$iter}';"; //! Not using ZAcceleration
         $result = $conn->query($query);
         $row = $result->fetch_assoc();
@@ -44,7 +44,7 @@
           } while($currentEntry < $entry);
   
 
-          for ($iter = $entry; $iter <= $entry + $result->num_rows - 1, $iter++)  {
+          for ($iter = $entry; $iter <= $entry + $result->num_rows - 1; $iter++)  {
             $currentXAccel = $row["XAcceleration"];
             $currentYAccel = $row["YAcceleration"];
             //* Check for direction change, if previous entry of this device has XAcceleration or YAcceleration with an opposite sign to the current one, it's a change
@@ -111,7 +111,7 @@
     }
 
     function getAccelLevels($conn, $entry, $lastEntry)  {
-      for ($iter = $entry; $iter <= $lastEntry, $iter++)  {
+      for ($iter = $entry; $iter <= $lastEntry; $iter++)  {
         // Get next row
         $query = "SELECT DeviceID, XAcceleration, YAcceleration FROM Accelerometer WHERE Entry='{$iter}';"; //! Not using ZAcceleration
         $result = $conn->query($query);
