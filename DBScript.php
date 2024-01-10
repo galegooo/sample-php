@@ -108,7 +108,7 @@
 
             // Get ready for next entry
             $previousXAccel = $currentXAccel;
-            $previousYAccel = $currentYAccel
+            $previousYAccel = $currentYAccel;
             $previousDatetime = $currentDatetime;
             $previousVelocity = $velocity;
           }
