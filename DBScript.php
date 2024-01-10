@@ -7,7 +7,7 @@
     define("HS_THRESHOLD", 25.2);
 
     function getDirChangesAndNumSprints($conn, $entry, $lastEntry)  {
-      IDs = array();
+      $IDs = array();
       // Check all new entries, get different DeviceIDs
       for ($iter = $entry; $iter <= $lastEntry, $iter++)  {
         $query = "SELECT DeviceID FROM Accelerometer WHERE Entry='{$iter}';"; //! Not using ZAcceleration
