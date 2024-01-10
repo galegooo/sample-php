@@ -117,7 +117,7 @@
     }
 
     function getAccelLevels($conn, $entry, $lastEntry)  {
-      for ($iter = $entry; $iter <= $lastEntry, $iter++)  {
+      for ($iter = $entry; $iter <= $lastEntry; $iter++)  {
         // Get next row
         $query = "SELECT DeviceID, XAcceleration, YAcceleration FROM Accelerometer WHERE Entry='{$iter}';"; //! Not using ZAcceleration
         $result = $conn->query($query);
