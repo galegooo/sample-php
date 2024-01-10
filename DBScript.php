@@ -6,155 +6,184 @@
     define("ACCEL_3", 3);
     define("HS_THRESHOLD", 25.2);
 
-    function getDirChangesAndNumSprints($date, $result, $XAccel, $YAccel, $ID, $conn, $entry)  {
-      $query = "SELECT * FROM Accelerometer WHERE DeviceID='{$ID}' ORDER BY Datetime DESC;";
-      $result = $conn->query($query);
+    function getDirChangesAndNumSprints($conn, $entry, $lastEntry)  {
+      IDs = array();
+      // Check all new entries, get different DeviceIDs
+      for ($iter = $entry; $iter <= $lastEntry, $iter++)  {
+        $query = "SELECT DeviceID FROM Accelerometer WHERE Entry='{$iter}';"; //! Not using ZAcceleration
+        $result = $conn->query($query);
+        $row = $result->fetch_assoc();
+        $deviceID = $row["DeviceID"];
 
-      if ($result->num_rows == 1) {
-        // This was the first entry of this tracker, velocity is 0
-        $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity=0 WHERE Entry='{$entry}';");
-        $stmt->execute();
+        if(array_search($deviceID, IDs) == false) // Add it to the list if a new MAC is found
+          array_push($IDs, $deviceID);
       }
-      else  {
-        // Ignore rows until the one with Entry=$entry (multiple instances of this file may be running, last entry is not necessarily the one inserted by this instance)
-        do {
+
+      for($IDs as $deviceID)  { // Cycle through different MAC addresses
+        $query = "SELECT Entry, Datetime, XAcceleration, YAcceleration, Velocity FROM Accelerometer WHERE DeviceID='{$deviceID}' ORDER BY Datetime ASC;";
+        $result = $conn->query($query);
+
+        if ($result->num_rows == 1) {
+          // This was the first entry of this tracker, velocity is 0
           $row = $result->fetch_assoc();
-          $currentEntry = $row["Entry"];
-        } while($currentEntry != $entry);
-
-        $row = $result->fetch_assoc();  // Check next row, the chronologically previous one
-
-        $currentXAccel = $row["XAcceleration"];
-        $currentYAccel = $row["YAcceleration"];
-        //* Check for direction change, if second most recent entry of this device has XAcceleration or YAcceleration with an opposite sign to what as just inserted, it's a change
-        if(($currentXAccel < 0 and $XAccel > 0) or ($currentXAccel > 0 and $XAccel < 0) or ($currentYAccel < 0 and $YAccel > 0) or ($currentYAccel > 0 and $YAccel < 0))  {
-          //* Got a direction change, add to the DB
-          // First get current DirectionChanges value
-          $query = "SELECT DirectionChanges FROM SessionStats WHERE DeviceID='{$ID}';"; //! Should only be 1 or 0
-          $currentDirChanges = $conn->query($query);
-
-          if($currentDirChanges->num_rows == 0)	{
-            // No SessionStats for this DeviceID, create new
-            //TODO needs to fetch name
-            $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$ID}', 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 'TEST', 0, 0, 0, 0, 0, 0, 0);");
-          }
-          else  {
-            $currentDirChanges = $currentDirChanges->fetch_assoc();
-            $currentDirChanges = $currentDirChanges["DirectionChanges"] + 1;  // Increment it
-
-            $stmt = $conn->prepare("UPDATE SessionStats SET DirectionChanges={$currentDirChanges} WHERE DeviceID='{$ID}';");
-          }
+          $entry = $row["Entry"];
+          $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity=0 WHERE Entry='{$entry}';");
           $stmt->execute();
         }
+        else  {
+          // Ignore rows until one with Entry >= $entry
+          do {
+            $row = $result->fetch_assoc();
+            $currentEntry = $row["Entry"];
+            if($currentEntry < $entry) {
+              $previousXAccel = $row["XAcceleration"];  // Keep this for future comparison
+              $previousYAccel = $row["YAcceleration"];
+              $previousDatetime = $row["Datetime"];
+              $previousVelocity = $row["Velocity"];
+            }
+          } while($currentEntry < $entry);
+  
 
-        //* Check if velocity between last and second to last entry is above HS_THRESHOLD
-        // First check time difference
-        $currentDatetime = new DateTime($row["Datetime"]);
-        $date = new DateTime($date);
-        $timeDiff = $date->getTimestamp() - $currentDatetime->getTimestamp();
-
-        //* Do median value between current accel and last entry accel
-        $accelSum = sqrt(pow($XAccel, 2) + pow($YAccel, 2));
-        $currentAccelSum = sqrt(pow($currentXAccel, 2) + pow($currentYAccel, 2));
-        $medianAccel = ($accelSum + $currentAccelSum) / 2;
-        
-        // Get initial velocity and calculate current velocity
-        $initialVelocity = $row["Velocity"];
-        $velocity = $initialVelocity + ($medianAccel * $timeDiff);
-
-        // Put this velocity in the current entry (up until now it should be -1)
-        $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity} WHERE Entry='{$entry}';");
-        $stmt->execute();
-
-        // If it's above the threshold, add it to NumSprints
-        if(abs($velocity) >= HS_THRESHOLD)	{
-          $query = "SELECT NumSprints FROM SessionStats WHERE DeviceID='{$ID}';"; //! Should only be 1
-          $results = $conn->query($query);
-
-          if($results->num_rows == 0)	{
-            // No SessionStats for this DeviceID, create new
-            //TODO needs to fetch name
-            $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$ID}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'TEST', 0, 0, 0, 1, 0, 0, 0);");
+          for ($iter = $entry; $iter <= $entry + $result->num_rows - 1, $iter++)  {
+            $currentXAccel = $row["XAcceleration"];
+            $currentYAccel = $row["YAcceleration"];
+            //* Check for direction change, if previous entry of this device has XAcceleration or YAcceleration with an opposite sign to the current one, it's a change
+            if(($currentXAccel < 0 and $previousXAccel > 0) or ($currentXAccel > 0 and $previousXAccel < 0) or ($currentYAccel < 0 and $previousYAccel > 0) or ($currentYAccel > 0 and $previousYAccel < 0))  {
+              //* Got a direction change, add to the DB
+              // First get current DirectionChanges value
+              $query = "SELECT DirectionChanges FROM SessionStats WHERE DeviceID='{$deviceID}';"; //! Should only be 1 or 0
+              $currentDirChanges = $conn->query($query);
+    
+              if($currentDirChanges->num_rows == 0)	{
+                // No SessionStats for this DeviceID, create new
+                //TODO needs to fetch name
+                $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$deviceID}', 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, '{$deviceID}', 0, 0, 0, 0, 0, 0, 0);");
+              }
+              else  {
+                $currentDirChanges = $currentDirChanges->fetch_assoc();
+                $currentDirChanges = $currentDirChanges["DirectionChanges"] + 1;  // Increment it
+    
+                $stmt = $conn->prepare("UPDATE SessionStats SET DirectionChanges={$currentDirChanges} WHERE DeviceID='{$deviceID}';");
+              }
+              $stmt->execute();
+            }
+    
+            //* Check if velocity between last and current entry is above HS_THRESHOLD
+            // First check time difference
+            $currentDatetime = new DateTime($row["Datetime"]);
+            $previousDatetime = new DateTime($previousDatetime);
+            $timeDiff = $currentDatetime->getTimestamp() - $previousDatetime->getTimestamp();
+    
+            //* Do median value between current accel and last entry accel
+            $previousAccelSum = sqrt(pow($previousXAccel, 2) + pow($previousYAccel, 2));
+            $currentAccelSum = sqrt(pow($currentXAccel, 2) + pow($currentYAccel, 2));
+            $medianAccel = ($previousAccelSum + $currentAccelSum) / 2;
+            
+            //* Calculate current velocity
+            $velocity = $previousVelocity + ($medianAccel * $timeDiff);
+    
+            //* Put this velocity in the current entry (up until now it should be -1)
+            $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity} WHERE Entry='{$entry}';");
             $stmt->execute();
-          }
-          else  {
-            $row = $results->fetch_assoc();
-
-            $numSprints = $row["NumSprints"] + 1;
-            $stmt = $conn->prepare("UPDATE SessionStats SET NumSprints={$numSprints} WHERE DeviceID='{$ID}';");
-            $stmt->execute();
+    
+            // If it's above the threshold, add it to NumSprints
+            if(abs($velocity) >= HS_THRESHOLD)	{
+              $query = "SELECT NumSprints FROM SessionStats WHERE DeviceID='{$ID}';"; //! Should only be 1
+              $results = $conn->query($query);
+    
+              if($results->num_rows == 0)	{
+                // No SessionStats for this DeviceID, create new
+                //TODO needs to fetch name
+                $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$ID}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'TEST', 0, 0, 0, 1, 0, 0, 0);");
+                $stmt->execute();
+              }
+              else  {
+                $row = $results->fetch_assoc();
+    
+                $numSprints = $row["NumSprints"] + 1;
+                $stmt = $conn->prepare("UPDATE SessionStats SET NumSprints={$numSprints} WHERE DeviceID='{$ID}';");
+                $stmt->execute();
+              }
+            }
           }
         }
       }
     }
 
-    function getAccelLevel($XAccel, $YAccel, $conn, $ID)  {
-      $XAccelAbs = abs($XAccel);
-      $YAccelAbs = abs($YAccel);
+    function getAccelLevels($conn, $entry, $lastEntry)  {
+      for ($iter = $entry; $iter <= $lastEntry, $iter++)  {
+        // Get next row
+        $query = "SELECT DeviceID, XAcceleration, YAcceleration FROM Accelerometer WHERE Entry='{$iter}';"; //! Not using ZAcceleration
+        $result = $conn->query($query);
+        $row = $result->fetch_assoc();
+        $deviceID = $row["DeviceID"];
+        $XAccel = floatval($row["XAcceleration"]);
+        $XAccel = floatval($row["XAcceleration"]);
 
-      $accelSum = $XAccelAbs + $YAccelAbs;
+        $accelSum = sqrt(pow($XAccelAbs, 2) + pow($YAccelAbs, 2));
 
-      // Check if sum of accelerations is higher than thresholds
-      if($accelSum >= ACCEL_1 and $accelSum < ACCEL_2)  {
-        // Check number of counts this trackerID has
-        $query = "SELECT CountAccelerationLevel1 FROM SessionStats WHERE DeviceID='{$ID}';"; //! Should only be 1 or 0
-        $results = $conn->query($query);
+        // Check if sum of accelerations is higher than thresholds
+        if($accelSum >= ACCEL_1 and $accelSum < ACCEL_2)  {
+          // Check number of counts this trackerID has
+          $query = "SELECT CountAccelerationLevel1 FROM SessionStats WHERE DeviceID='{$deviceID}';"; //! Should only be 1 or 0
+          $results = $conn->query($query);
 
-        if($results->num_rows == 0)	{
-          // No SessionStats for this DeviceID, create new
-          //TODO needs to fetch name
-          $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$ID}', 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 'TEST', 0, 0, 0, 0, 0, 0, 0);");
+          if($results->num_rows == 0)	{
+            // No SessionStats for this DeviceID, create new
+            //TODO needs to fetch name, right now using MAC as name
+            $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$deviceID}', 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, '{$deviceID}', 0, 0, 0, 0, 0, 0, 0);");
+          }
+          else  {
+            $row = $results->fetch_assoc();
+
+            $currentCount = $row["CountAccelerationLevel1"];
+
+            $count = $currentCount + 1;
+            $stmt = $conn->prepare("UPDATE SessionStats SET CountAccelerationLevel1={$count} WHERE DeviceID='{$deviceID}';");
+          }
+
+          $stmt->execute();
         }
-        else  {
-          $row = $results->fetch_assoc();
+        else if($accelSum >= ACCEL_2 and $accelSum < ACCEL_3) {
+          $query = "SELECT CountAccelerationLevel2 FROM SessionStats WHERE DeviceID='{$deviceID}';"; //! Should only be 1 or 0
+          $results = $conn->query($query);
 
-          $currentCount = $row["CountAccelerationLevel1"];
+          if($results->num_rows == 0)	{
+            // No SessionStats for this DeviceID, create new
+            //TODO needs to fetch name, right now using MAC as name
+            $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$deviceID}', 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, '{$deviceID}', 0, 0, 0, 0, 0, 0, 0);");
+          }
+          else  {
+            $row = $results->fetch_assoc();
 
-          $count = $currentCount + 1;
-          $stmt = $conn->prepare("UPDATE SessionStats SET CountAccelerationLevel1={$count} WHERE DeviceID='{$ID}';");
+            $currentCount = $row["CountAccelerationLevel2"];
+
+            $count = $currentCount + 1;
+            $stmt = $conn->prepare("UPDATE SessionStats SET CountAccelerationLevel2={$count} WHERE DeviceID='{$deviceID}';");
+          }
+
+          $stmt->execute();
         }
+        else if($accelSum >= ACCEL_3) {
+          $query = "SELECT CountAccelerationLevel3 FROM SessionStats WHERE DeviceID='{$ID}';"; //! Should only be 1 or 0
+          $results = $conn->query($query);
 
-        $stmt->execute();
-      }
-      else if($accelSum >= ACCEL_2 and $accelSum < ACCEL_3) {
-        $query = "SELECT CountAccelerationLevel2 FROM SessionStats WHERE DeviceID='{$ID}';"; //! Should only be 1 or 0
-        $results = $conn->query($query);
+          if($results->num_rows == 0)	{
+            // No SessionStats for this DeviceID, create new
+            //TODO needs to fetch name
+            $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$deviceID}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, '{$deviceID}', 0, 0, 0, 0, 0, 0, 0);");
+          }
+          else  {
+            $row = $results->fetch_assoc();
 
-        if($results->num_rows == 0)	{
-          // No SessionStats for this DeviceID, create new
-          //TODO needs to fetch name
-          $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$ID}', 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 'TEST', 0, 0, 0, 0, 0, 0, 0);");
+            $currentCount = $row["CountAccelerationLevel3"];
+
+            $count = $currentCount + 1;
+            $stmt = $conn->prepare("UPDATE SessionStats SET CountAccelerationLevel3={$count} WHERE DeviceID='{$deviceID}';");
+          }
+
+          $stmt->execute();
         }
-        else  {
-          $row = $results->fetch_assoc();
-
-          $currentCount = $row["CountAccelerationLevel2"];
-
-          $count = $currentCount + 1;
-          $stmt = $conn->prepare("UPDATE SessionStats SET CountAccelerationLevel2={$count} WHERE DeviceID='{$ID}';");
-        }
-
-        $stmt->execute();
-      }
-      else if($accelSum >= ACCEL_3) {
-        $query = "SELECT CountAccelerationLevel3 FROM SessionStats WHERE DeviceID='{$ID}';"; //! Should only be 1 or 0
-        $results = $conn->query($query);
-
-        if($results->num_rows == 0)	{
-          // No SessionStats for this DeviceID, create new
-          //TODO needs to fetch name
-          $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$lastTrackerID}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 'TEST', 0, 0, 0, 0, 0, 0, 0);");
-        }
-        else  {
-          $row = $results->fetch_assoc();
-
-          $currentCount = $row["CountAccelerationLevel3"];
-
-          $count = $currentCount + 1;
-          $stmt = $conn->prepare("UPDATE SessionStats SET CountAccelerationLevel3={$count} WHERE DeviceID='{$ID}';");
-        }
-
-        $stmt->execute();
       }
     }
 
@@ -188,14 +217,17 @@
     $password = getenv("PASS");
     $port = getenv("DBPORT");
 
+    // Get JSON data
     $data = file_get_contents('php://input');
     $json = json_decode($data);
-    file_put_contents( "php://stderr", $data);
-    // Get JSON data
+    //file_put_contents( "php://stderr", $data);
+    
     if($json->FTM) {
       $FTM = $json->FTM;
       $table = "FTM";    // Got table
       $FTMinput = array();
+
+      $firstFTMEntry = $FTM[0]; // To update position
 
       // Get all JSON entries and store them in FTMinput
       foreach($FTM as $FTMdata)  {
@@ -214,6 +246,8 @@
       $Accelerometer = $json->Accelerometer;
       $table = "Accelerometer";    // Got table
       $Accelinput = array();
+
+      $firstAccelEntry = $Accelerometer[0]; // To update velocity 
 
       foreach($Accelerometer as $Acceldata)  {
         $tempData = array();
@@ -267,27 +301,28 @@
 
 
     // Update tables
-    // if($table == "Accelerometer") {# Last entry was in Accelerometer, check for direction change, average velocity and acceleration in last min, acceleration level, NumSprints
-    //   $query = "SELECT Entry FROM Accelerometer WHERE DeviceID='{$ID}' AND Datetime='{$date}' AND XAcceleration={$XAccel} AND ZAcceleration={$ZAccel} AND Velocity=-1;";  //! not using YAccel because for some reason the SQL query didn't work
-    //   $result = $conn->query($query);
+    if($table == "Accelerometer") {# Last entry was in Accelerometer, check for direction change, average velocity and acceleration in last min, acceleration level, NumSprints
+      // Get entry of first row
+      $query = "SELECT Entry FROM Accelerometer WHERE DeviceID='{$firstAccelEntry->DeviceID}' AND Datetime='{$firstAccelEntry->Datetime}' AND XAcceleration={$firstAccelEntry->XAcceleration} AND ZAcceleration={$firstAccelEntry->ZAcceleration} AND Velocity=-1;";  //! not using YAccel because for some reason the SQL query didn't work
+      $result = $conn->query($query);
 
-    //   // Output data, should only be 1 row
-    //   if ($result->num_rows == 1) {
-    //     $row = $result->fetch_assoc();
-    //     $entry = intval($row["Entry"]);
+      // Should only be 1 row
+      if ($result->num_rows == 1) {
+        $row = $result->fetch_assoc();
+        $entry = intval($row["Entry"]);
+        $lastEntry = $entry + sizeof($Accelinput) - 1;
+        // Get levels of acceleration
+        getAccelLevels($conn, $entry, $lastEntry);
 
-    //     // Get levels of acceleration, ignoring ZAccel
-    //     getAccelLevel($XAccel, $YAccel, $conn, $ID);
-
-    //     getDirChangesAndNumSprints($date, $result, $XAccel, $YAccel, $ID, $conn, $entry);
-    //     //getAvgVelocityAccel($result, $conn, $lastTrackerID, $lastXAccel, $lastYAccel, $lastDateTime);
-    //   }
-    //   else {
-    //     echo "Got " . $result->num_rows . "rows, expecting 1"; 
-    //   }
-    // }
-    // else if($table == "FTM")
-    //   //TODO algoritmo
+        getDirChangesAndNumSprints($conn, $entry, $lastEntry);
+        //getAvgVelocityAccel($result, $conn, $lastTrackerID, $lastXAccel, $lastYAccel, $lastDateTime);
+      }
+      else {
+        echo "Got " . $result->num_rows . "rows, expecting 1"; 
+      }
+    }
+    else if($table == "FTM")
+      //TODO algoritmo
 
 
     // Close the connection
