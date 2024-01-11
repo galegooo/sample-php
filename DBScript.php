@@ -5,6 +5,7 @@
     define("ACCEL_2", 2);
     define("ACCEL_3", 3);
     define("HS_THRESHOLD", 25.2);
+    define("MAX_DIFF", 4);
 
     function getVelDirChangesSprints($conn, $entry, $lastEntry)  {
       $IDs = array();
@@ -30,7 +31,7 @@
           $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity=0 WHERE Entry='{$entry}';");
           $stmt->execute();
         }
-        else  { //TODO if all entries are from the same ping, first one must have velocity be equal to 0
+        else  {
           // Ignore rows until one with Entry >= $entry
           do {
             $row = $result->fetch_assoc();
@@ -50,66 +51,72 @@
             $currentYAccel = floatval($row["YAcceleration"]);
             $currentDatetime = new DateTime($row["Datetime"]);
 
-            file_put_contents("php://stderr", "checking entry {$currentEntry} with datetime {$row["Datetime"]}");
+            file_put_contents("php://stderr", "checking entry {$currentEntry} with datetime {$row["Datetime"]}\n");
 
             if($previousXAccel) { // This entry can be the first from this device. In this case, velocity is 0
-              //* Check for direction change, if previous entry of this device had XAcceleration or YAcceleration with an opposite sign to the current one, it's a change
-              if(($currentXAccel < 0 and $previousXAccel > 0) or ($currentXAccel > 0 and $previousXAccel < 0) or ($currentYAccel < 0 and $previousYAccel > 0) or ($currentYAccel > 0 and $previousYAccel < 0))  {
-                //* Got a direction change, add to the DB
-                // First get current DirectionChanges value
-                $query = "SELECT DirectionChanges FROM SessionStats WHERE DeviceID='{$deviceID}';"; //! Should only be 1 or 0
-                $currentDirChanges = $conn->query($query);
-      
-                if($currentDirChanges->num_rows == 0)	{
-                  // No SessionStats for this DeviceID, create new
-                  //TODO needs to fetch name
-                  $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$deviceID}', 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, '{$deviceID}', 0, 0, 0, 0, 0, 0, 0);");
-                }
-                else  {
-                  $currentDirChanges = $currentDirChanges->fetch_assoc();
-                  $currentDirChanges = $currentDirChanges["DirectionChanges"] + 1;  // Increment it
-      
-                  $stmt = $conn->prepare("UPDATE SessionStats SET DirectionChanges={$currentDirChanges} WHERE DeviceID='{$deviceID}';");
-                }
-                $stmt->execute();
-              }
-      
-              //* Check if velocity between last and current entry is above HS_THRESHOLD
-              // First check time difference
+              // First check time difference, if greater than MAX_DIFF, start velocity from 0 and ignore direction changes and sprints
               $timeDiff = $currentDatetime->getTimestamp() - $previousDatetime->getTimestamp();
-      
-              //* Do median value between current accel and last entry accel
-              $previousAccelSum = sqrt(pow($previousXAccel, 2) + pow($previousYAccel, 2));
-              $currentAccelSum = sqrt(pow($currentXAccel, 2) + pow($currentYAccel, 2));
-              $medianAccel = ($previousAccelSum + $currentAccelSum) / 2;
               
-              //* Calculate current velocity
-              $velocity = $previousVelocity + ($medianAccel * $timeDiff);
-              file_put_contents("php://stderr", "velocity is {$velocity}");
-              
-      
-              //* Put this velocity in the current entry (up until now it should be -1)
-              $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity} WHERE Entry='{$currentEntry}';");
-              $stmt->execute();
-      
-              // If it's above the threshold, add it to NumSprints
-              if(abs($velocity) >= HS_THRESHOLD)	{
-                $query = "SELECT NumSprints FROM SessionStats WHERE DeviceID='{$deviceID}';"; //! Should only be 1 or 0
-                $results = $conn->query($query);
-      
-                if($results->num_rows == 0)	{
-                  // No SessionStats for this DeviceID, create new
-                  //TODO needs to fetch name
-                  $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$deviceID}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '{$deviceID}', 0, 0, 0, 1, 0, 0, 0);");
+              if($timeDiff > MAX_DIFF)  {
+                //* Check for direction change, if previous entry of this device had XAcceleration or YAcceleration with an opposite sign to the current one, it's a change
+                if(($currentXAccel < 0 and $previousXAccel > 0) or ($currentXAccel > 0 and $previousXAccel < 0) or ($currentYAccel < 0 and $previousYAccel > 0) or ($currentYAccel > 0 and $previousYAccel < 0))  {
+                  //* Got a direction change, add to the DB
+                  // First get current DirectionChanges value
+                  $query = "SELECT DirectionChanges FROM SessionStats WHERE DeviceID='{$deviceID}';"; //! Should only be 1 or 0
+                  $currentDirChanges = $conn->query($query);
+        
+                  if($currentDirChanges->num_rows == 0)	{
+                    // No SessionStats for this DeviceID, create new
+                    //TODO needs to fetch name
+                    $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$deviceID}', 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, '{$deviceID}', 0, 0, 0, 0, 0, 0, 0);");
+                  }
+                  else  {
+                    $currentDirChanges = $currentDirChanges->fetch_assoc();
+                    $currentDirChanges = $currentDirChanges["DirectionChanges"] + 1;  // Increment it
+        
+                    $stmt = $conn->prepare("UPDATE SessionStats SET DirectionChanges={$currentDirChanges} WHERE DeviceID='{$deviceID}';");
+                  }
                   $stmt->execute();
                 }
-                else  {
-                  $row = $results->fetch_assoc();
-      
-                  $numSprints = $row["NumSprints"] + 1;
-                  $stmt = $conn->prepare("UPDATE SessionStats SET NumSprints={$numSprints} WHERE DeviceID='{$deviceID}';");
-                  $stmt->execute();
+        
+                //* Check if velocity between last and current entry is above HS_THRESHOLD
+                //* Do median value between current accel and last entry accel
+                $previousAccelSum = sqrt(pow($previousXAccel, 2) + pow($previousYAccel, 2));
+                $currentAccelSum = sqrt(pow($currentXAccel, 2) + pow($currentYAccel, 2));
+                $medianAccel = ($previousAccelSum + $currentAccelSum) / 2;
+                
+                //* Calculate current velocity
+                $velocity = $previousVelocity + ($medianAccel * $timeDiff);
+                file_put_contents("php://stderr", "velocity is {$velocity}");
+                
+                //* Put this velocity in the current entry (up until now it should be -1)
+                $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity} WHERE Entry='{$currentEntry}';");
+                $stmt->execute();
+        
+                // If it's above the threshold, add it to NumSprints
+                if(abs($velocity) >= HS_THRESHOLD)	{
+                  $query = "SELECT NumSprints FROM SessionStats WHERE DeviceID='{$deviceID}';"; //! Should only be 1 or 0
+                  $results = $conn->query($query);
+        
+                  if($results->num_rows == 0)	{
+                    // No SessionStats for this DeviceID, create new
+                    //TODO needs to fetch name
+                    $stmt = $conn->prepare("INSERT INTO SessionStats (DeviceID, Distance, DistanceWalk, DistanceHS, DistanceSprint, DistanceLastMin, DirectionChanges, AverageVelocityLastMin, CountAccelerationLevel1, CountAccelerationLevel2, CountAccelerationLevel3, AverageAccelerationLastMin, Name, DistanceJog, DistanceRacing, Intensity, NumSprints, NumDecceleration1, NumDecceleration2, NumDecceleration3) VALUES ('{$deviceID}', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '{$deviceID}', 0, 0, 0, 1, 0, 0, 0);");
+                    $stmt->execute();
+                  }
+                  else  {
+                    $row = $results->fetch_assoc();
+        
+                    $numSprints = $row["NumSprints"] + 1;
+                    $stmt = $conn->prepare("UPDATE SessionStats SET NumSprints={$numSprints} WHERE DeviceID='{$deviceID}';");
+                    $stmt->execute();
+                  }
                 }
+              }
+              else  {
+                $velocity = 0;
+                $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity} WHERE Entry='{$currentEntry}';");
+                $stmt->execute();
               }
             }
             else  {
