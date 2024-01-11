@@ -130,6 +130,7 @@
             $previousYAccel = $currentYAccel;
             $previousDatetime = $currentDatetime;
             $previousVelocity = $velocity;
+            $row = $result->fetch_assoc();
           }
         }
       }
