@@ -85,7 +85,8 @@
                 
                 //* Calculate current velocity
                 $velocity = $previousVelocity + ($medianAccel * $timeDiff);
-                file_put_contents("php://stderr", "velocity is {$velocity}");
+                file_put_contents("php://stderr", "calculating velocity for entry {$currentEntry}\n");
+                file_put_contents("php://stderr", "velocity is {$velocity}; previousVelocity is {$previousVelocity}; medianAccel is {$medianAccel}; timeDiff is {$timeDiff}");
                 
                 //* Put this velocity in the current entry (up until now it should be -1)
                 $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity} WHERE Entry='{$currentEntry}';");
@@ -243,7 +244,6 @@
     // Get JSON data
     $data = file_get_contents('php://input');
     $json = json_decode($data);
-    //file_put_contents( "php://stderr", $data);
     
     if($json->FTM) {
       $FTM = $json->FTM;
