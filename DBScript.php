@@ -315,7 +315,7 @@
       $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, Datetime, XAcceleration, YAcceleration, ZAcceleration, Velocity) VALUES (?, ?, ?, ?, ?, ?)");
 
       foreach($Accelinput as $entry)  {
-        file_put_contents("php://stderr", "parsing accel entry with datetime {$entry[1]}\n");
+        file_put_contents("php://stderr", "parsing accel entry with datetime {$entry[1]}; XAccel {$entry[2]}; YAccel {$entry[3]}\n");
         $stmt->bind_param("ssdddd", $entry[0], $entry[1], $entry[2], $entry[3], $entry[4], $entry[5]);
         $stmt->execute();
       }
@@ -338,7 +338,7 @@
         // Get levels of acceleration
         getAccelLevels($conn, $entry, $lastEntry);
         getVelDirChangesSprints($conn, $entry, $lastEntry);
-        //getAvgVelocityAccel($result, $conn, $lastTrackerID, $lastXAccel, $lastYAccel, $lastDateTime);
+        getAvgVelocityAccel($conn, $entry, $lastEntry);
       }
       else {
         echo "Got " . $result->num_rows . "rows, expecting 1"; 
