@@ -331,7 +331,7 @@
       }
     }
     else if($table == "Accelerometer")	{
-      $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, Datetime, XAcceleration, YAcceleration, ZAcceleration, Velocity, XVelocity, YVelocity) VALUES (?, ?, ?, ?, ?, ?)");
+      $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, Datetime, XAcceleration, YAcceleration, ZAcceleration, Velocity, XVelocity, YVelocity) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
       foreach($Accelinput as $entry)  {
         file_put_contents("php://stderr", "parsing accel entry with datetime {$entry[1]}; XAccel {$entry[2]}; YAccel {$entry[3]}\n");
