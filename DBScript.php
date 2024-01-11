@@ -28,7 +28,7 @@
           // This was the first entry of this tracker, velocity is 0
           $row = $result->fetch_assoc();
           $entry = $row["Entry"];
-          $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity=0 WHERE Entry='{$entry}';");
+          $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity=0, XVelocity=0, YVelocity=0 WHERE Entry='{$entry}';");
           $stmt->execute();
         }
         else  {
@@ -40,6 +40,8 @@
               $previousXAccel = floatval($row["XAcceleration"]);  // Keep this for future comparison
               $previousYAccel = floatval($row["YAcceleration"]);
               $previousDatetime = new DateTime($row["Datetime"]);
+              $previousXVelocity = floatval($row["XVelocity"]);
+              $previousYVelocity = floatval($row["YVelocity"]);
               $previousVelocity = floatval($row["Velocity"]);
             }
           } while($rowEntry < $entry);
@@ -77,22 +79,28 @@
                   $stmt->execute();
                 }
         
-                //* Check if velocity between last and current entry is above HS_THRESHOLD
-                //* Do median value between current accel and last entry accel
-                $previousAccelSum = sqrt(pow($previousXAccel, 2) + pow($previousYAccel, 2));
-                $currentAccelSum = sqrt(pow($currentXAccel, 2) + pow($currentYAccel, 2));
-                $medianAccel = ($previousAccelSum + $currentAccelSum) / 2;
-                
                 //* Calculate current velocity
-                $velocity = $previousVelocity + ($medianAccel * $timeDiff);
+                $XVelocity = $previousVelocityX + ($currentXAccel - $previousXAccel) * $timeDiff;
+                $YVelocity = $previousVelocityY + ($currentYAccel - $previousYAccel) * $timeDiff;
+                if($XVelocity < $previousXVelocity || $YVelocity < $previousYVelocity)  {
+                  // At least one component changed sentido
+                  if(($XVelocity < $previousXVelocity And $XVelocity - $previousXVelocity > $YVelocity - $previousYVelocity) Or ($YVelocity < $previousYVelocity And $YVelocity - $previousYVelocity > $XVelocity - $previousXVelocity))  { // Velocity should get lower
+                    $velocity = $previousVelocity - sqrt(pow($XVelocity, 2) + pow($YVelocity, 2));
+                  }
+                  else  { // Velocity should get higher
+                    $velocity = $previousVelocity + sqrt(pow($XVelocity, 2) + pow($YVelocity, 2));
+                  }
+                }
                 file_put_contents("php://stderr", "calculating velocity for entry {$currentEntry}\n");
-                file_put_contents("php://stderr", "velocity is {$velocity}; previousVelocity is {$previousVelocity}; medianAccel is {$medianAccel}\n");
-                file_put_contents("php>//stderr", "timeDiff is {$timeDiff}\n");
+                file_put_contents("php://stderr", "velocity is {$velocity}; previousVelocity is {$previousVelocity}\n");
+                file_put_contents("php://stderr", "timeDiff is {$timeDiff}\n");
+                file_put_contents("php://stderr", "XVelocity is {$XVelocity}, previous is {$previousXVelocity}\nYVelocity is {$YVelocity}, previous is {$previousYVelocity}\n");
                 
                 //* Put this velocity in the current entry (up until now it should be -1)
-                $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity} WHERE Entry='{$currentEntry}';");
+                $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity}, XVelocity={$XVelocity}, YVelocity={$YVelocity} WHERE Entry='{$currentEntry}';");
                 $stmt->execute();
         
+                //* Check if velocity between last and current entry is above HS_THRESHOLD
                 // If it's above the threshold, add it to NumSprints
                 if(abs($velocity) >= HS_THRESHOLD)	{
                   $query = "SELECT NumSprints FROM SessionStats WHERE DeviceID='{$deviceID}';"; //! Should only be 1 or 0
@@ -113,15 +121,19 @@
                   }
                 }
               }
-              else  {
+              else  { // Last ping is too far in the past, start over
                 $velocity = 0;
-                $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity} WHERE Entry='{$currentEntry}';");
+                $XVelocity = 0;
+                $YVelocity = 0;
+                $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity}, XVelocity={$XVelocity}, YVelocity={$YVelocity} WHERE Entry='{$currentEntry}';");
                 $stmt->execute();
               }
             }
             else  {
               $velocity = 0;
-              $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity} WHERE Entry='{$currentEntry}';");
+              $XVelocity = 0;
+              $YVelocity = 0;
+              $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity}, XVelocity={$XVelocity}, YVelocity={$YVelocity} WHERE Entry='{$currentEntry}';");
               $stmt->execute();
             }
 
@@ -130,6 +142,8 @@
             $previousYAccel = $currentYAccel;
             $previousDatetime = $currentDatetime;
             $previousVelocity = $velocity;
+            $previousXVelocity = $XVelocity;
+            $previousYVelocity = $YVelocity;
             $row = $result->fetch_assoc();
           }
         }
@@ -309,6 +323,7 @@
 
       foreach($FTMinput as $entry)  {
         file_put_contents("php://stderr", "parsing FTM entry with datetime {$entry[1]}\n");
+        file_put_contents("php://stderr", "and distance {$distance}; from tracker {$DeviceID} to beacon {$beaconID}");
         $stmt->bind_param("ssds", $entry[0], $entry[1], $entry[2], $entry[3]);
         $stmt->execute();
       }
