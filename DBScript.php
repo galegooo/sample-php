@@ -323,7 +323,7 @@
 
       foreach($FTMinput as $entry)  {
         file_put_contents("php://stderr", "parsing FTM entry with datetime {$entry[1]}\n");
-        file_put_contents("php://stderr", "and distance {$distance}; from tracker {$DeviceID} to beacon {$beaconID}");
+        file_put_contents("php://stderr", "and distance {$distance}; from tracker {$deviceID} to beacon {$beaconID}\n");
         $stmt->bind_param("ssds", $entry[0], $entry[1], $entry[2], $entry[3]);
         $stmt->execute();
       }
