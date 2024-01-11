@@ -50,7 +50,7 @@
             $currentYAccel = floatval($row["YAcceleration"]);
             $currentDatetime = new DateTime($row["Datetime"]);
 
-            file_put_contents("php://stderr", "checking entry {$currentEntry} with datetime {$currentDatetime}");
+            file_put_contents("php://stderr", "checking entry {$currentEntry} with datetime {$row["Datetime"]}");
 
             if($previousXAccel) { // This entry can be the first from this device. In this case, velocity is 0
               //* Check for direction change, if previous entry of this device had XAcceleration or YAcceleration with an opposite sign to the current one, it's a change
