@@ -80,8 +80,8 @@
                 }
         
                 //* Calculate current velocity
-                $XVelocity = $previousVelocityX + ($currentXAccel - $previousXAccel) * $timeDiff;
-                $YVelocity = $previousVelocityY + ($currentYAccel - $previousYAccel) * $timeDiff;
+                $XVelocity = $previousXVelocity + ($currentXAccel - $previousXAccel) * $timeDiff;
+                $YVelocity = $previousYVelocity + ($currentYAccel - $previousYAccel) * $timeDiff;
                 if($XVelocity < $previousXVelocity || $YVelocity < $previousYVelocity)  {
                   // At least one component changed sentido
                   if(($XVelocity < $previousXVelocity And $XVelocity - $previousXVelocity > $YVelocity - $previousYVelocity) Or ($YVelocity < $previousYVelocity And $YVelocity - $previousYVelocity > $XVelocity - $previousXVelocity))  { // Velocity should get lower
