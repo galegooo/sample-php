@@ -179,7 +179,7 @@
           $stmt->execute();
         }
         else if($accelSum >= ACCEL_3) {
-          $query = "SELECT CountAccelerationLevel3 FROM SessionStats WHERE DeviceID='{$ID}';"; //! Should only be 1 or 0
+          $query = "SELECT CountAccelerationLevel3 FROM SessionStats WHERE DeviceID='{$deviceID}';"; //! Should only be 1 or 0
           $results = $conn->query($query);
 
           if($results->num_rows == 0)	{
