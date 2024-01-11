@@ -50,6 +50,8 @@
             $currentYAccel = floatval($row["YAcceleration"]);
             $currentDatetime = new DateTime($row["Datetime"]);
 
+            file_put_contents("php://stderr", "checking entry {$currentEntry} with datetime {$currentDatetime}");
+
             if($previousXAccel) { // This entry can be the first from this device. In this case, velocity is 0
               //* Check for direction change, if previous entry of this device had XAcceleration or YAcceleration with an opposite sign to the current one, it's a change
               if(($currentXAccel < 0 and $previousXAccel > 0) or ($currentXAccel > 0 and $previousXAccel < 0) or ($currentYAccel < 0 and $previousYAccel > 0) or ($currentYAccel > 0 and $previousYAccel < 0))  {
@@ -83,6 +85,8 @@
               
               //* Calculate current velocity
               $velocity = $previousVelocity + ($medianAccel * $timeDiff);
+              file_put_contents("php://stderr", "velocity is {$velocity}");
+              
       
               //* Put this velocity in the current entry (up until now it should be -1)
               $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity} WHERE Entry='{$currentEntry}';");
