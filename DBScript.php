@@ -300,8 +300,10 @@
           $YAccel = $Acceldata->YAcceleration;
           $ZAccel = $Acceldata->ZAcceleration;
           $velocity = $Acceldata->Velocity;   // This is always -1
+          $XVelocity = $Acceldata->XVelocity;   // This is always -1
+          $YVelocity = $Acceldata->YVelocity;   // This is always -1
 
-          array_push($tempData, $deviceID, $datetime, $XAccel, $YAccel, $ZAccel, $velocity);
+          array_push($tempData, $deviceID, $datetime, $XAccel, $YAccel, $ZAccel, $velocity, $XVelocity, $YVelocity);
           array_push($Accelinput, $tempData);
         }
       }
