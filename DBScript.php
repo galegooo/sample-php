@@ -55,7 +55,7 @@
               // First check time difference, if greater than MAX_DIFF, start velocity from 0 and ignore direction changes and sprints
               $timeDiff = $currentDatetime->getTimestamp() - $previousDatetime->getTimestamp();
               
-              if($timeDiff > MAX_DIFF)  {
+              if($timeDiff <= MAX_DIFF)  {
                 //* Check for direction change, if previous entry of this device had XAcceleration or YAcceleration with an opposite sign to the current one, it's a change
                 if(($currentXAccel < 0 and $previousXAccel > 0) or ($currentXAccel > 0 and $previousXAccel < 0) or ($currentYAccel < 0 and $previousYAccel > 0) or ($currentYAccel > 0 and $previousYAccel < 0))  {
                   //* Got a direction change, add to the DB
@@ -86,7 +86,8 @@
                 //* Calculate current velocity
                 $velocity = $previousVelocity + ($medianAccel * $timeDiff);
                 file_put_contents("php://stderr", "calculating velocity for entry {$currentEntry}\n");
-                file_put_contents("php://stderr", "velocity is {$velocity}; previousVelocity is {$previousVelocity}; medianAccel is {$medianAccel}; timeDiff is {$timeDiff}");
+                file_put_contents("php://stderr", "velocity is {$velocity}; previousVelocity is {$previousVelocity}; medianAccel is {$medianAccel}\n");
+                file_put_contents("php>//stderr", "timeDiff is {$timeDiff}\n");
                 
                 //* Put this velocity in the current entry (up until now it should be -1)
                 $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity} WHERE Entry='{$currentEntry}';");
