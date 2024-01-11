@@ -30,7 +30,7 @@
           $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity=0 WHERE Entry='{$entry}';");
           $stmt->execute();
         }
-        else  {
+        else  { //TODO if all entries are from the same ping, first one must have velocity be equal to 0
           // Ignore rows until one with Entry >= $entry
           do {
             $row = $result->fetch_assoc();
@@ -126,7 +126,7 @@
         $XAccel = floatval($row["XAcceleration"]);
         $XAccel = floatval($row["XAcceleration"]);
 
-        $accelSum = sqrt(pow($XAccelAbs, 2) + pow($YAccelAbs, 2));
+        $accelSum = sqrt(pow($XAccel, 2) + pow($YAccel, 2));
 
         // Check if sum of accelerations is higher than thresholds
         if($accelSum >= ACCEL_1 and $accelSum < ACCEL_2)  {
@@ -239,13 +239,15 @@
       foreach($FTM as $FTMdata)  {
         $tempData = array();
 
-        $deviceID = $FTMdata->DeviceID;
-        $datetime = $FTMdata->Datetime;
-        $distance = $FTMdata->Distance;
-        $beaconID = $FTMdata->BeaconID;
+        if($FTMdata->DeviceID != "000000000000")  {  // Ignore when MAC address is all zeros
+          $deviceID = $FTMdata->DeviceID;
+          $datetime = $FTMdata->Datetime;
+          $distance = $FTMdata->Distance;
+          $beaconID = $FTMdata->BeaconID;
 
-        array_push($tempData, $deviceID, $datetime, $distance, $beaconID);
-        array_push($FTMinput, $tempData);
+          array_push($tempData, $deviceID, $datetime, $distance, $beaconID);
+          array_push($FTMinput, $tempData);
+        }
       }
     }
     else if ($json->Accelerometer) {
@@ -258,15 +260,17 @@
       foreach($Accelerometer as $Acceldata)  {
         $tempData = array();
 
-        $deviceID = $Acceldata->DeviceID;
-        $datetime = $Acceldata->Datetime;
-        $XAccel = $Acceldata->XAcceleration;
-        $YAccel = $Acceldata->YAcceleration;
-        $ZAccel = $Acceldata->ZAcceleration;
-        $velocity = $Acceldata->Velocity;   // This is always -1
+        if($Acceldata->DeviceID != "000000000000")  {  // Ignore when MAC address is all zeros
+          $deviceID = $Acceldata->DeviceID;
+          $datetime = $Acceldata->Datetime;
+          $XAccel = $Acceldata->XAcceleration;
+          $YAccel = $Acceldata->YAcceleration;
+          $ZAccel = $Acceldata->ZAcceleration;
+          $velocity = $Acceldata->Velocity;   // This is always -1
 
-        array_push($tempData, $deviceID, $datetime, $XAccel, $YAccel, $ZAccel, $velocity);
-        array_push($Accelinput, $tempData);
+          array_push($tempData, $deviceID, $datetime, $XAccel, $YAccel, $ZAccel, $velocity);
+          array_push($Accelinput, $tempData);
+        }
       }
     }
     else {
