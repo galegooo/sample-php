@@ -51,8 +51,6 @@
             $currentYAccel = floatval($row["YAcceleration"]);
             $currentDatetime = new DateTime($row["Datetime"]);
 
-            file_put_contents("php://stderr", "checking entry {$currentEntry} with datetime {$row["Datetime"]}\n");
-
             if($previousXAccel) { // This entry can be the first from this device. In this case, velocity is 0
               // First check time difference, if greater than MAX_DIFF, start velocity from 0 and ignore direction changes and sprints
               $timeDiff = $currentDatetime->getTimestamp() - $previousDatetime->getTimestamp();
@@ -308,6 +306,7 @@
       $stmt = $conn->prepare("INSERT INTO FTM (DeviceID, Datetime, Distance, BeaconID) VALUES (?, ?, ?, ?);");
 
       foreach($FTMinput as $entry)  {
+        file_put_contents("php://stderr", "parsing FTM entry with datetime {$entry[1]}\n");
         $stmt->bind_param("ssds", $entry[0], $entry[1], $entry[2], $entry[3]);
         $stmt->execute();
       }
@@ -316,6 +315,7 @@
       $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, Datetime, XAcceleration, YAcceleration, ZAcceleration, Velocity) VALUES (?, ?, ?, ?, ?, ?)");
 
       foreach($Accelinput as $entry)  {
+        file_put_contents("php://stderr", "parsing accel entry with datetime {$entry[1]}\n");
         $stmt->bind_param("ssdddd", $entry[0], $entry[1], $entry[2], $entry[3], $entry[4], $entry[5]);
         $stmt->execute();
       }
