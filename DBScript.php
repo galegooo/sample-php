@@ -31,7 +31,7 @@
           $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity=0, XVelocity=0, YVelocity=0 WHERE Entry='{$entry}';");
           $stmt->execute();
         }
-        else  {
+        else if($result->num_rows != 0) {
           // Ignore rows until one with Entry >= $entry
           do {
             $row = $result->fetch_assoc();
@@ -324,18 +324,18 @@
       $stmt = $conn->prepare("INSERT INTO FTM (DeviceID, Datetime, Distance, BeaconID) VALUES (?, ?, ?, ?);");
 
       foreach($FTMinput as $entry)  {
-        file_put_contents("php://stderr", "parsing FTM entry with datetime {$entry[1]}\n");
-        file_put_contents("php://stderr", "and distance {$distance}; from tracker {$deviceID} to beacon {$beaconID}\n");
+        //file_put_contents("php://stderr", "parsing FTM entry with datetime {$entry[1]}\n");
+        //file_put_contents("php://stderr", "and distance {$distance}; from tracker {$deviceID} to beacon {$beaconID}\n");
         $stmt->bind_param("ssds", $entry[0], $entry[1], $entry[2], $entry[3]);
         $stmt->execute();
       }
     }
     else if($table == "Accelerometer")	{
-      $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, Datetime, XAcceleration, YAcceleration, ZAcceleration, Velocity) VALUES (?, ?, ?, ?, ?, ?)");
+      $stmt = $conn->prepare("INSERT INTO Accelerometer (DeviceID, Datetime, XAcceleration, YAcceleration, ZAcceleration, Velocity, XVelocity, YVelocity) VALUES (?, ?, ?, ?, ?, ?)");
 
       foreach($Accelinput as $entry)  {
         file_put_contents("php://stderr", "parsing accel entry with datetime {$entry[1]}; XAccel {$entry[2]}; YAccel {$entry[3]}\n");
-        $stmt->bind_param("ssdddd", $entry[0], $entry[1], $entry[2], $entry[3], $entry[4], $entry[5]);
+        $stmt->bind_param("ssdddddd", $entry[0], $entry[1], $entry[2], $entry[3], $entry[4], $entry[5], $entry[6], $entry[7]);
         $stmt->execute();
       }
     }
