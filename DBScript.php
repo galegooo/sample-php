@@ -127,6 +127,8 @@
                 $YVelocity = 0;
                 $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity}, XVelocity={$XVelocity}, YVelocity={$YVelocity} WHERE Entry='{$currentEntry}';");
                 $stmt->execute();
+
+                file_put_contents("php://stderr", "starting over in entry {$currentEntry}\n");
               }
             }
             else  {
@@ -135,6 +137,8 @@
               $YVelocity = 0;
               $stmt = $conn->prepare("UPDATE Accelerometer SET Velocity={$velocity}, XVelocity={$XVelocity}, YVelocity={$YVelocity} WHERE Entry='{$currentEntry}';");
               $stmt->execute();
+
+              file_put_contents("php://stderr", "had no previous entry, setting velocities at 0 in entry {$currentEntry}\n");
             }
 
             // Get ready for next entry
@@ -324,8 +328,8 @@
       $stmt = $conn->prepare("INSERT INTO FTM (DeviceID, Datetime, Distance, BeaconID) VALUES (?, ?, ?, ?);");
 
       foreach($FTMinput as $entry)  {
-        //file_put_contents("php://stderr", "parsing FTM entry with datetime {$entry[1]}\n");
-        //file_put_contents("php://stderr", "and distance {$distance}; from tracker {$deviceID} to beacon {$beaconID}\n");
+        file_put_contents("php://stderr", "parsing FTM entry with datetime {$entry[1]}\n");
+        file_put_contents("php://stderr", "and distance {$distance}; from tracker {$deviceID} to beacon {$beaconID}\n");
         $stmt->bind_param("ssds", $entry[0], $entry[1], $entry[2], $entry[3]);
         $stmt->execute();
       }
