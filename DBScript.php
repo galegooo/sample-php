@@ -21,7 +21,7 @@
       }
 
       foreach($IDs as $deviceID)  { // Cycle through different MAC addresses
-        $query = "SELECT Entry, Datetime, XAcceleration, YAcceleration, Velocity FROM Accelerometer WHERE DeviceID='{$deviceID}' ORDER BY Datetime ASC;";
+        $query = "SELECT Entry, Datetime, XAcceleration, YAcceleration, Velocity, XVelocity, YVelocity FROM Accelerometer WHERE DeviceID='{$deviceID}' ORDER BY Datetime ASC;";
         $result = $conn->query($query);
 
         if ($result->num_rows == 1) {
