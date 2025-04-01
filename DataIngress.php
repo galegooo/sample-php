@@ -1,6 +1,8 @@
 <html>
 <body>
   <?php
+  echo "inside DataIngress.php"
+  
   // Get key values for database connection
   $hostname = getenv("HOSTNAME");
   $dbname = getenv("DBNAME");
