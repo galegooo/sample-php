@@ -2,7 +2,7 @@
 <body>
   <?php
   echo "inside DataIngress.php"
-  
+
   // Get key values for database connection
   $hostname = getenv("HOSTNAME");
   $dbname = getenv("DBNAME");
@@ -16,6 +16,7 @@
 
   //? Data can either be for table FTM or table IMU
   if($json->FTM) {
+    echo "got FTM"
     $FTM = $json->FTM;
     $table = "FTM";
     $FTMInput = array();  // Array to store all entries
@@ -36,6 +37,7 @@
     }
   }
   else if ($json->IMU) {
+    echo "got IMU"
     $IMU = $json->IMU;
     $table = "IMU";
     $IMUInput = array();  // Array to store all entries
