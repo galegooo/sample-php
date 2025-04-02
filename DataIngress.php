@@ -1,13 +1,11 @@
 <html>
 <body>
   <?php
-  error_log("inside DataIngress.php")
-
   // Get key values for database connection
   $hostname = getenv("HOSTNAME");
   $dbname = getenv("DBNAME");
   $username = getenv("USERNAME");
-  $password = getenv("PASS");
+  $password = getenv("PASSWORD");
   $port = getenv("DBPORT");
 
   // Get JSON data sent from device
@@ -16,7 +14,6 @@
 
   //? Data can either be for table FTM or table IMU
   if($json->FTM) {
-    error_log("got FTM")
     $FTM = $json->FTM;
     $table = "FTM";
     $FTMInput = array();  // Array to store all entries
@@ -37,7 +34,6 @@
     }
   }
   else if ($json->IMU) {
-    error_log("got IMU")
     $IMU = $json->IMU;
     $table = "IMU";
     $IMUInput = array();  // Array to store all entries
